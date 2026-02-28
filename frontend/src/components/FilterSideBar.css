@@ -1,0 +1,92 @@
+.filter-sidebar {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  position: sticky;
+  top: 5rem;
+}
+
+.filter-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.filter-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filter-icon {
+  height: 1.25rem;
+  width: 1.25rem;
+  color: #ec4899;
+}
+
+.filter-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.clear-button {
+  font-size: 0.875rem;
+  color: #ec4899;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.clear-button:hover {
+  color: #db2777;
+}
+
+.filter-section {
+  margin-bottom: 1.5rem;
+}
+
+.filter-section:last-child {
+  margin-bottom: 0;
+}
+
+.filter-section-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.75rem;
+}
+
+.filter-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-option {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.filter-option:hover .filter-label {
+  color: #1f2937;
+}
+
+.filter-radio {
+  width: 1rem;
+  height: 1rem;
+  accent-color: #ec4899;
+  cursor: pointer;
+}
+
+.filter-label {
+  margin-left: 0.75rem;
+  font-size: 0.875rem;
+  color: #4b5563;
+  transition: color 0.2s;
+}

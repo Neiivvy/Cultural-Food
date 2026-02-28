@@ -1,0 +1,164 @@
+.homepage {
+  min-height: 100vh;
+  background-color: #f9fafb;
+}
+
+.hero-section {
+  background: linear-gradient(to right, #fdf2f8, white);
+  padding: 3rem 1rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.hero-container {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.hero-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 1rem 0;
+}
+
+.hero-highlight {
+  color: #ec4899;
+}
+
+.hero-description {
+  font-size: 1.125rem;
+  color: #4b5563;
+  max-width: 42rem;
+  margin: 0;
+}
+
+.main-content {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.content-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.sidebar-wrapper {
+  width: 100%;
+}
+
+.content-main {
+  flex: 1;
+}
+
+.section-header {
+  margin-bottom: 1.5rem;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 0.5rem 0;
+}
+
+.section-description {
+  color: #4b5563;
+  margin: 0;
+}
+
+.culture-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+.active-filters {
+  margin-top: 2rem;
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+}
+
+.active-filters-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 0.75rem 0;
+}
+
+.filter-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.filter-tag {
+  padding: 0.5rem 1rem;
+  background-color: #fdf2f8;
+  color: #db2777;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.active-filters-note {
+  font-size: 0.875rem;
+  color: #4b5563;
+  margin: 0;
+}
+
+.footer {
+  background-color: white;
+  margin-top: 4rem;
+  padding: 2rem 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.footer-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  text-align: center;
+  color: #4b5563;
+}
+
+.footer-container p {
+  margin: 0;
+}
+
+.footer-copyright {
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .hero-title {
+    font-size: 3rem;
+  }
+
+  .culture-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-title {
+    font-size: 3.5rem;
+  }
+
+  .content-wrapper {
+    flex-direction: row;
+  }
+
+  .sidebar-wrapper {
+    width: 16rem;
+    flex-shrink: 0;
+  }
+
+  .culture-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

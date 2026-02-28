@@ -1,0 +1,86 @@
+.food-card {
+  background-color: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.food-card:hover {
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.food-card-image-wrapper {
+  position: relative;
+  height: 14rem;
+  overflow: hidden;
+}
+
+.food-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.food-card:hover .food-card-image {
+  transform: scale(1.1);
+}
+
+.food-card-body {
+  padding: 1.25rem;
+}
+
+.food-card-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 0.5rem 0;
+  transition: color 0.2s;
+}
+
+.food-card:hover .food-card-title {
+  color: #ec4899;
+}
+
+.food-card-culture {
+  font-size: 0.875rem;
+  color: #ec4899;
+  font-weight: 500;
+  margin: 0 0 0.5rem 0;
+}
+
+.food-card-description {
+  font-size: 0.875rem;
+  color: #4b5563;
+  margin: 0 0 0.75rem 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp:2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.food-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.food-tag {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+}
+
+.festival-tag {
+  background-color: #fdf2f8;
+  color: #db2777;
+}
+
+.season-tag {
+  background-color: #f3f4f6;
+  color: #4b5563;
+}
