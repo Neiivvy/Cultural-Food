@@ -5,45 +5,22 @@ import './Signup.css';
 
 const Signup = () => {
   const navigate = useNavigate();
-
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
-  });
-
+  const [formData, setFormData] = useState({ name: '', email: '', password: '', confirmPassword: '' });
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
     if (serverError) setServerError('');
   };
 
-  const validateEmail = (email) => {
-    // RFC 5322 compliant email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
+  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const validateForm = () => {
     const newErrors = {};
-
-    // Name validation - at least 3 characters, no numbers
     if (!formData.name.trim()) {
       newErrors.name = 'Name is required';
     } else if (formData.name.trim().length < 3) {
@@ -51,15 +28,11 @@ const Signup = () => {
     } else if (/\d/.test(formData.name)) {
       newErrors.name = 'Name cannot contain numbers';
     }
-
-    // Email validation - valid format
     if (!formData.email) {
       newErrors.email = 'Email is required';
     } else if (!validateEmail(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
     }
-
-    // Password validation - at least 7 characters, uppercase, lowercase, number
     if (!formData.password) {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 7) {
@@ -71,14 +44,11 @@ const Signup = () => {
     } else if (!/(?=.*\d)/.test(formData.password)) {
       newErrors.password = 'Password must contain at least one number';
     }
-
-    // Confirm password validation
     if (!formData.confirmPassword) {
       newErrors.confirmPassword = 'Please confirm your password';
     } else if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -86,24 +56,18 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
-
     setLoading(true);
     setServerError('');
-
     try {
       const result = await signupUser({
         name: formData.name.trim(),
         email: formData.email,
         password: formData.password,
       });
-
-      // Store token and user in localStorage
       localStorage.setItem('token', result.data.token);
       localStorage.setItem('user', JSON.stringify(result.data.user));
-
-      navigate('/dashboard');
+      navigate('/home'); // → UserHomePage
     } catch (err) {
-      // Handle field-level errors returned by express-validator on the backend
       if (err.response?.data?.errors) {
         const fieldErrors = {};
         err.response.data.errors.forEach(({ field, message }) => {
@@ -111,10 +75,7 @@ const Signup = () => {
         });
         setErrors(fieldErrors);
       } else {
-        const msg =
-          err.response?.data?.message ||
-          'Signup failed. Please try again.';
-        setServerError(msg);
+        setServerError(err.response?.data?.message || 'Signup failed. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -124,7 +85,6 @@ const Signup = () => {
   return (
     <div className="signup-page">
       <div className="signup-container">
-        {/* Logo/Brand */}
         <div className="brand-section">
           <Link to="/" className="brand-link">
             <h1 className="brand-title">
@@ -135,123 +95,67 @@ const Signup = () => {
           <p className="brand-subtitle">Create your account to get started.</p>
         </div>
 
-        {/* Signup Form */}
         <div className="form-card">
           <h2 className="form-title">Sign Up</h2>
-
           <form onSubmit={handleSubmit} className="auth-form">
-            {/* Server Error Banner */}
-            {serverError && (
-              <div className="server-error-banner">
-                {serverError}
-              </div>
-            )}
+            {serverError && <div className="server-error-banner">{serverError}</div>}
 
-            {/* Name Field */}
             <div className="form-group">
-              <label htmlFor="name" className="form-label">
-                Full Name
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
+              <label htmlFor="name" className="form-label">Full Name</label>
+              <input type="text" id="name" name="name" value={formData.name}
                 onChange={handleChange}
                 className={`form-input ${errors.name ? 'input-error' : ''}`}
-                placeholder="Your full name"
-                disabled={loading}
-              />
-              {errors.name && (
-                <p className="error-message">{errors.name}</p>
-              )}
+                placeholder="Your full name" disabled={loading} />
+              {errors.name && <p className="error-message">{errors.name}</p>}
               <p className="input-hint">At least 3 characters, no numbers</p>
             </div>
 
-            {/* Email Field */}
             <div className="form-group">
-              <label htmlFor="email" className="form-label">
-                Email Address
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
+              <label htmlFor="email" className="form-label">Email Address</label>
+              <input type="email" id="email" name="email" value={formData.email}
                 onChange={handleChange}
                 className={`form-input ${errors.email ? 'input-error' : ''}`}
-                placeholder="your@email.com"
-                disabled={loading}
-              />
-              {errors.email && (
-                <p className="error-message">{errors.email}</p>
-              )}
+                placeholder="your@email.com" disabled={loading} />
+              {errors.email && <p className="error-message">{errors.email}</p>}
             </div>
 
-            {/* Password Field */}
             <div className="form-group">
-              <label htmlFor="password" className="form-label">
-                Password
-              </label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
+              <label htmlFor="password" className="form-label">Password</label>
+              <input type="password" id="password" name="password" value={formData.password}
                 onChange={handleChange}
                 className={`form-input ${errors.password ? 'input-error' : ''}`}
-                placeholder="••••••••"
-                disabled={loading}
-              />
-              {errors.password && (
-                <p className="error-message">{errors.password}</p>
-              )}
-              <p className="input-hint">
-                7+ characters with uppercase, lowercase, and number
-              </p>
+                placeholder="••••••••" disabled={loading} />
+              {errors.password && <p className="error-message">{errors.password}</p>}
+              <p className="input-hint">7+ characters with uppercase, lowercase, and number</p>
             </div>
 
-            {/* Confirm Password Field */}
             <div className="form-group">
-              <label htmlFor="confirmPassword" className="form-label">
-                Confirm Password
-              </label>
-              <input
-                type="password"
-                id="confirmPassword"
-                name="confirmPassword"
+              <label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
+              <input type="password" id="confirmPassword" name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 className={`form-input ${errors.confirmPassword ? 'input-error' : ''}`}
-                placeholder="••••••••"
-                disabled={loading}
-              />
-              {errors.confirmPassword && (
-                <p className="error-message">{errors.confirmPassword}</p>
-              )}
+                placeholder="••••••••" disabled={loading} />
+              {errors.confirmPassword && <p className="error-message">{errors.confirmPassword}</p>}
             </div>
 
-            {/* Submit Button */}
             <button type="submit" className="submit-button" disabled={loading}>
               {loading ? 'Creating account...' : 'Create Account'}
             </button>
           </form>
 
-          {/* Divider */}
           <div className="divider">
             <div className="divider-line"></div>
             <span className="divider-text">or</span>
             <div className="divider-line"></div>
           </div>
 
-          {/* Login Link */}
           <p className="footer-text">
             Already have an account?{' '}
             <Link to="/login" className="footer-link">Login</Link>
           </p>
         </div>
 
-        {/* Back to Home */}
         <div className="back-home">
           <Link to="/" className="back-link">← Back to Home</Link>
         </div>

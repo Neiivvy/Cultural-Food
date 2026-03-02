@@ -1,19 +1,14 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { loginUser } from '../api/authService';
+import { Link } from 'react-router-dom';
 import './Login.css';
 
 const Login = () => {
-  const navigate = useNavigate();
-
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
 
   const [errors, setErrors] = useState({});
-  const [serverError, setServerError] = useState('');
-  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -28,7 +23,6 @@ const Login = () => {
         [name]: ''
       }));
     }
-    if (serverError) setServerError('');
   };
 
   const validateEmail = (email) => {
@@ -64,32 +58,11 @@ const Login = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    if (!validateForm()) return;
-
-    setLoading(true);
-    setServerError('');
-
-    try {
-      const result = await loginUser({
-        email: formData.email,
-        password: formData.password,
-      });
-
-      // Store token and user in localStorage
-      localStorage.setItem('token', result.data.token);
-      localStorage.setItem('user', JSON.stringify(result.data.user));
-
-      navigate('/dashboard');
-    } catch (err) {
-      const msg =
-        err.response?.data?.message ||
-        err.response?.data?.errors?.[0]?.message ||
-        'Login failed. Please try again.';
-      setServerError(msg);
-    } finally {
-      setLoading(false);
+    if (validateForm()) {
+      console.log('Login form submitted:', formData);
+      alert('Login successful! (UI only)');
     }
   };
 
@@ -112,13 +85,6 @@ const Login = () => {
           <h2 className="form-title">Login</h2>
 
           <form onSubmit={handleSubmit} className="auth-form">
-            {/* Server Error Banner */}
-            {serverError && (
-              <div className="server-error-banner">
-                {serverError}
-              </div>
-            )}
-
             {/* Email Field */}
             <div className="form-group">
               <label htmlFor="email" className="form-label">
@@ -132,7 +98,6 @@ const Login = () => {
                 onChange={handleChange}
                 className={`form-input ${errors.email ? 'input-error' : ''}`}
                 placeholder="your@email.com"
-                disabled={loading}
               />
               {errors.email && (
                 <p className="error-message">{errors.email}</p>
@@ -152,7 +117,6 @@ const Login = () => {
                 onChange={handleChange}
                 className={`form-input ${errors.password ? 'input-error' : ''}`}
                 placeholder="••••••••"
-                disabled={loading}
               />
               {errors.password && (
                 <p className="error-message">{errors.password}</p>
@@ -170,8 +134,8 @@ const Login = () => {
             </div>
 
             {/* Submit Button */}
-            <button type="submit" className="submit-button" disabled={loading}>
-              {loading ? 'Logging in...' : 'Login'}
+            <button type="submit" className="submit-button">
+              Login
             </button>
           </form>
 

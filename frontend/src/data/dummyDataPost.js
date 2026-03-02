@@ -1,0 +1,202 @@
+export const CULTURE_TAGS = [
+  'Newari', 'Madhesi', 'Tamang', 'Rai', 'Gurung',
+  'Tharu', 'Sherpa', 'Magar', 'Limbu', 'Brahmin/Chhetri',
+];
+
+export const dummyPosts = [
+  {
+    id: 1,
+    type: 'recipe',
+    title: 'Traditional Yomari – Newari Rice Dumpling',
+    description: 'A sacred Newari delicacy made during Yomari Punhi festival. Steamed rice flour dumplings filled with chaku and sesame — every fold tells a story.',
+    culture: 'Newari',
+    author: {
+      name: 'Anisha Shrestha',
+      avatar: 'https://ui-avatars.com/api/?name=Anisha+Shrestha&background=ec4899&color=fff&size=40',
+    },
+    image: 'https://images.unsplash.com/photo-1631515243349-e0cb75fb8d3a?w=640&q=80',
+    likes: 142,
+    liked: false,
+    comments: 18,
+    createdAt: '2025-02-28',
+    ingredients: [
+      '2 cups rice flour',
+      '1 cup chaku (molasses)',
+      '3 tbsp sesame seeds',
+      'Warm water',
+      'Pinch of salt',
+    ],
+    steps: [
+      'Knead rice flour with warm water into soft dough.',
+      'Mix chaku with sesame seeds for the filling.',
+      'Shape dough into fish form and fill with mixture.',
+      'Seal and steam for 15 minutes.',
+      'Serve warm with a drizzle of ghee.',
+    ],
+  },
+  {
+    id: 2,
+    type: 'reel',
+    title: 'How to make Sel Roti in 60 seconds!',
+    description: 'Watch the crispy Nepali ring-shaped bread being made the traditional way — a Dashain staple in every Brahmin household.',
+    culture: 'Brahmin/Chhetri',
+    author: {
+      name: 'Prakash Adhikari',
+      avatar: 'https://ui-avatars.com/api/?name=Prakash+Adhikari&background=6366f1&color=fff&size=40',
+    },
+    image: 'https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=640&q=80',
+    likes: 389,
+    liked: true,
+    comments: 44,
+    createdAt: '2025-02-26',
+    ingredients: ['3 cups rice flour', '½ cup sugar', '2 ripe bananas', 'Ghee for frying', 'Cardamom'],
+    steps: [
+      'Blend all ingredients into a smooth batter.',
+      'Let the batter rest for 2 hours.',
+      'Pour in a ring shape into hot oil using a squeeze bottle.',
+      'Fry until evenly golden brown on both sides.',
+    ],
+  },
+  {
+    id: 3,
+    type: 'recipe',
+    title: 'Dhikri – Tharu Festival Sweet',
+    description: 'A traditional Tharu sweet made from rice flour and served during Maghi festival. Distinct cone shape, soft chewy texture, and coconut richness.',
+    culture: 'Tharu',
+    author: {
+      name: 'Sunita Chaudhary',
+      avatar: 'https://ui-avatars.com/api/?name=Sunita+Chaudhary&background=10b981&color=fff&size=40',
+    },
+    image: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=640&q=80',
+    likes: 97,
+    liked: false,
+    comments: 11,
+    createdAt: '2025-02-24',
+    ingredients: ['2 cups rice flour', '1 cup coconut milk', 'Jaggery to taste', 'Cardamom powder'],
+    steps: [
+      'Mix rice flour with coconut milk until smooth.',
+      'Add jaggery and cardamom to taste.',
+      'Shape mixture into cones using a mould.',
+      'Steam until fully cooked through.',
+    ],
+  },
+  {
+    id: 4,
+    type: 'recipe',
+    title: 'Gundruk ko Jhol – Fermented Leaf Soup',
+    description: 'A Gurung staple, this tangy fermented leafy green soup is rich in probiotics and traditionally served with dhido on cold mountain evenings.',
+    culture: 'Gurung',
+    author: {
+      name: 'Bimala Gurung',
+      avatar: 'https://ui-avatars.com/api/?name=Bimala+Gurung&background=f59e0b&color=fff&size=40',
+    },
+    image: 'https://images.unsplash.com/photo-1547592180-85f173990554?w=640&q=80',
+    likes: 213,
+    liked: false,
+    comments: 29,
+    createdAt: '2025-02-20',
+    ingredients: ['100g gundruk', 'Onion, garlic, tomato', 'Mustard oil', 'Turmeric, cumin', 'Salt to taste'],
+    steps: [
+      'Soak gundruk for 30 minutes until soft.',
+      'Sauté diced onion in mustard oil until golden.',
+      'Add tomatoes and spices; cook 5 minutes.',
+      'Add soaked gundruk and water.',
+      'Simmer 20 minutes and adjust salt.',
+    ],
+  },
+  {
+    id: 5,
+    type: 'reel',
+    title: 'Chatamari – Newari Pizza from scratch!',
+    description: 'Making chatamari the traditional Newari way — a crispy rice flour crepe loaded with minced meat, egg, and fresh green onions.',
+    culture: 'Newari',
+    author: {
+      name: 'Anisha Shrestha',
+      avatar: 'https://ui-avatars.com/api/?name=Anisha+Shrestha&background=ec4899&color=fff&size=40',
+    },
+    image: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=640&q=80',
+    likes: 456,
+    liked: false,
+    comments: 62,
+    createdAt: '2025-02-18',
+    ingredients: ['2 cups rice flour', 'Minced chicken', '2 eggs', 'Green onions', 'Ginger-garlic paste'],
+    steps: [
+      'Prepare thin rice batter and season.',
+      'Pour in hot pan and spread very thin.',
+      'Add toppings while still wet.',
+      'Cover and cook for 5 minutes until edges crisp.',
+    ],
+  },
+];
+
+export const dummyQuestions = [
+  {
+    id: 1,
+    title: 'What makes authentic Newari Samay Baji different from regular beaten rice dishes?',
+    description: 'I want to understand the ritual significance and specific elements that make Samay Baji unique compared to other chiura dishes in Nepal.',
+    culture: 'Newari',
+    author: {
+      name: 'Rajan Maharjan',
+      avatar: 'https://ui-avatars.com/api/?name=Rajan+Maharjan&background=8b5cf6&color=fff&size=40',
+    },
+    answers: 7,
+    likes: 34,
+    createdAt: '2025-02-27',
+  },
+  {
+    id: 2,
+    title: 'How do Tharu communities traditionally preserve food for winter?',
+    description: 'I have heard Tharu communities have unique food preservation techniques. Can anyone share their traditional methods, especially for vegetables and fish?',
+    culture: 'Tharu',
+    author: {
+      name: 'Kavita Yadav',
+      avatar: 'https://ui-avatars.com/api/?name=Kavita+Yadav&background=f97316&color=fff&size=40',
+    },
+    answers: 12,
+    likes: 58,
+    createdAt: '2025-02-22',
+  },
+  {
+    id: 3,
+    title: 'Is Tongba made the same way across all Limbu communities?',
+    description: 'I have had Tongba at different places and the taste varies quite a bit. Are there regional or family variations in how this millet beer is prepared?',
+    culture: 'Limbu',
+    author: {
+      name: 'Sundar Rai',
+      avatar: 'https://ui-avatars.com/api/?name=Sundar+Rai&background=14b8a6&color=fff&size=40',
+    },
+    answers: 4,
+    likes: 21,
+    createdAt: '2025-02-15',
+  },
+];
+
+export const dummyComments = [
+  {
+    id: 1,
+    author: {
+      name: 'Rajan Maharjan',
+      avatar: 'https://ui-avatars.com/api/?name=Rajan+Maharjan&background=8b5cf6&color=fff&size=36',
+    },
+    text: 'This brings back memories of Yomari Punhi with my grandmother! Thank you for sharing.',
+    time: '2h ago',
+  },
+  {
+    id: 2,
+    author: {
+      name: 'Kavita Yadav',
+      avatar: 'https://ui-avatars.com/api/?name=Kavita+Yadav&background=f97316&color=fff&size=36',
+    },
+    text: 'The chaku filling is key — my mom would add a tiny bit of coconut too. Lovely recipe!',
+    time: '5h ago',
+  },
+  {
+    id: 3,
+    author: {
+      name: 'Sundar Rai',
+      avatar: 'https://ui-avatars.com/api/?name=Sundar+Rai&background=14b8a6&color=fff&size=36',
+    },
+    text: 'Tried this last Dashain and it came out perfect. The steaming time is spot on.',
+    time: '1d ago',
+  },
+];
