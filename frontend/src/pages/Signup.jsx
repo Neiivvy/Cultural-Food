@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { signupUser } from '../api/authService';
 import './Signup.css';
 
 const Signup = () => {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -11,7 +14,8 @@ const Signup = () => {
   });
 
   const [errors, setErrors] = useState({});
-  const [passwordStrength, setPasswordStrength] = useState('');
+  const [serverError, setServerError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -19,7 +23,7 @@ const Signup = () => {
       ...prev,
       [name]: value
     }));
-    
+
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
@@ -27,11 +31,7 @@ const Signup = () => {
         [name]: ''
       }));
     }
-
-    // Check password strength in real-time
-    if (name === 'password') {
-      checkPasswordStrength(value);
-    }
+    if (serverError) setServerError('');
   };
 
   const validateEmail = (email) => {
@@ -40,57 +40,26 @@ const Signup = () => {
     return emailRegex.test(email);
   };
 
-  const checkPasswordStrength = (password) => {
-    if (password.length === 0) {
-      setPasswordStrength('');
-      return;
-    }
-    
-    if (password.length < 7) {
-      setPasswordStrength('weak');
-      return;
-    }
-
-    let strength = 0;
-    
-    // Check for different character types
-    if (password.length >= 7) strength++;
-    if (password.length >= 10) strength++;
-    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
-    if (/\d/.test(password)) strength++;
-    if (/[^a-zA-Z\d]/.test(password)) strength++;
-
-    if (strength <= 2) {
-      setPasswordStrength('weak');
-    } else if (strength <= 3) {
-      setPasswordStrength('medium');
-    } else {
-      setPasswordStrength('strong');
-    }
-  };
-
   const validateForm = () => {
     const newErrors = {};
 
-    // Name validation
+    // Name validation - at least 3 characters, no numbers
     if (!formData.name.trim()) {
       newErrors.name = 'Name is required';
-    } else if (formData.name.trim().length < 2) {
-      newErrors.name = 'Name must be at least 2 characters';
-    } else if (formData.name.trim().length > 50) {
-      newErrors.name = 'Name must be less than 50 characters';
-    } else if (!/^[a-zA-Z\s]+$/.test(formData.name.trim())) {
-      newErrors.name = 'Name can only contain letters and spaces';
+    } else if (formData.name.trim().length < 3) {
+      newErrors.name = 'Name must be at least 3 characters';
+    } else if (/\d/.test(formData.name)) {
+      newErrors.name = 'Name cannot contain numbers';
     }
 
-    // Email validation
+    // Email validation - valid format
     if (!formData.email) {
       newErrors.email = 'Email is required';
     } else if (!validateEmail(formData.email)) {
-      newErrors.email = 'Please enter a valid email address (e.g., user@example.com)';
+      newErrors.email = 'Please enter a valid email address';
     }
 
-    // Password validation
+    // Password validation - at least 7 characters, uppercase, lowercase, number
     if (!formData.password) {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 7) {
@@ -114,11 +83,41 @@ const Signup = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validateForm()) {
-      console.log('Signup form submitted:', formData);
-      alert('Account created successfully! (UI only)');
+    if (!validateForm()) return;
+
+    setLoading(true);
+    setServerError('');
+
+    try {
+      const result = await signupUser({
+        name: formData.name.trim(),
+        email: formData.email,
+        password: formData.password,
+      });
+
+      // Store token and user in localStorage
+      localStorage.setItem('token', result.data.token);
+      localStorage.setItem('user', JSON.stringify(result.data.user));
+
+      navigate('/dashboard');
+    } catch (err) {
+      // Handle field-level errors returned by express-validator on the backend
+      if (err.response?.data?.errors) {
+        const fieldErrors = {};
+        err.response.data.errors.forEach(({ field, message }) => {
+          fieldErrors[field] = message;
+        });
+        setErrors(fieldErrors);
+      } else {
+        const msg =
+          err.response?.data?.message ||
+          'Signup failed. Please try again.';
+        setServerError(msg);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -141,6 +140,13 @@ const Signup = () => {
           <h2 className="form-title">Sign Up</h2>
 
           <form onSubmit={handleSubmit} className="auth-form">
+            {/* Server Error Banner */}
+            {serverError && (
+              <div className="server-error-banner">
+                {serverError}
+              </div>
+            )}
+
             {/* Name Field */}
             <div className="form-group">
               <label htmlFor="name" className="form-label">
@@ -154,10 +160,12 @@ const Signup = () => {
                 onChange={handleChange}
                 className={`form-input ${errors.name ? 'input-error' : ''}`}
                 placeholder="Your full name"
+                disabled={loading}
               />
               {errors.name && (
                 <p className="error-message">{errors.name}</p>
               )}
+              <p className="input-hint">At least 3 characters, no numbers</p>
             </div>
 
             {/* Email Field */}
@@ -173,11 +181,11 @@ const Signup = () => {
                 onChange={handleChange}
                 className={`form-input ${errors.email ? 'input-error' : ''}`}
                 placeholder="your@email.com"
+                disabled={loading}
               />
               {errors.email && (
                 <p className="error-message">{errors.email}</p>
               )}
-              
             </div>
 
             {/* Password Field */}
@@ -193,24 +201,13 @@ const Signup = () => {
                 onChange={handleChange}
                 className={`form-input ${errors.password ? 'input-error' : ''}`}
                 placeholder="••••••••"
+                disabled={loading}
               />
               {errors.password && (
                 <p className="error-message">{errors.password}</p>
               )}
-              {passwordStrength && (
-                <div className="password-strength">
-                  <div className="strength-bar-container">
-                    <div className={`strength-bar strength-${passwordStrength}`}></div>
-                  </div>
-                  <p className={`strength-text strength-${passwordStrength}`}>
-                    {passwordStrength === 'weak' && 'Weak password'}
-                    {passwordStrength === 'medium' && 'Medium password'}
-                    {passwordStrength === 'strong' && 'Strong password'}
-                  </p>
-                </div>
-              )}
               <p className="input-hint">
-                Must be 7+ characters with uppercase, lowercase, and number
+                7+ characters with uppercase, lowercase, and number
               </p>
             </div>
 
@@ -227,28 +224,16 @@ const Signup = () => {
                 onChange={handleChange}
                 className={`form-input ${errors.confirmPassword ? 'input-error' : ''}`}
                 placeholder="••••••••"
+                disabled={loading}
               />
               {errors.confirmPassword && (
                 <p className="error-message">{errors.confirmPassword}</p>
               )}
             </div>
 
-            {/* Terms & Conditions */}
-            <div className="terms-section">
-              <label className="checkbox-label">
-                <input type="checkbox" className="checkbox-input" required />
-                <span className="checkbox-text">
-                  I agree to the{' '}
-                  <a href="#" className="terms-link">Terms & Conditions</a>
-                  {' '}and{' '}
-                  <a href="#" className="terms-link">Privacy Policy</a>
-                </span>
-              </label>
-            </div>
-
             {/* Submit Button */}
-            <button type="submit" className="submit-button">
-              Create Account
+            <button type="submit" className="submit-button" disabled={loading}>
+              {loading ? 'Creating account...' : 'Create Account'}
             </button>
           </form>
 

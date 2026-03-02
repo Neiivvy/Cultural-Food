@@ -1,14 +1,19 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { loginUser } from '../api/authService';
 import './Login.css';
 
 const Login = () => {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
 
   const [errors, setErrors] = useState({});
+  const [serverError, setServerError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -23,6 +28,7 @@ const Login = () => {
         [name]: ''
       }));
     }
+    if (serverError) setServerError('');
   };
 
   const validateEmail = (email) => {
@@ -34,29 +40,56 @@ const Login = () => {
   const validateForm = () => {
     const newErrors = {};
 
-    // Email validation
+    // Email validation - valid format
     if (!formData.email) {
       newErrors.email = 'Email is required';
     } else if (!validateEmail(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
     }
 
-    // Password validation
+    // Password validation - at least 7 characters, uppercase, lowercase, number
     if (!formData.password) {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 7) {
       newErrors.password = 'Password must be at least 7 characters';
+    } else if (!/(?=.*[a-z])/.test(formData.password)) {
+      newErrors.password = 'Password must contain at least one lowercase letter';
+    } else if (!/(?=.*[A-Z])/.test(formData.password)) {
+      newErrors.password = 'Password must contain at least one uppercase letter';
+    } else if (!/(?=.*\d)/.test(formData.password)) {
+      newErrors.password = 'Password must contain at least one number';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validateForm()) {
-      console.log('Login form submitted:', formData);
-      alert('Login successful! (UI only)');
+    if (!validateForm()) return;
+
+    setLoading(true);
+    setServerError('');
+
+    try {
+      const result = await loginUser({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      // Store token and user in localStorage
+      localStorage.setItem('token', result.data.token);
+      localStorage.setItem('user', JSON.stringify(result.data.user));
+
+      navigate('/dashboard');
+    } catch (err) {
+      const msg =
+        err.response?.data?.message ||
+        err.response?.data?.errors?.[0]?.message ||
+        'Login failed. Please try again.';
+      setServerError(msg);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -79,6 +112,13 @@ const Login = () => {
           <h2 className="form-title">Login</h2>
 
           <form onSubmit={handleSubmit} className="auth-form">
+            {/* Server Error Banner */}
+            {serverError && (
+              <div className="server-error-banner">
+                {serverError}
+              </div>
+            )}
+
             {/* Email Field */}
             <div className="form-group">
               <label htmlFor="email" className="form-label">
@@ -92,6 +132,7 @@ const Login = () => {
                 onChange={handleChange}
                 className={`form-input ${errors.email ? 'input-error' : ''}`}
                 placeholder="your@email.com"
+                disabled={loading}
               />
               {errors.email && (
                 <p className="error-message">{errors.email}</p>
@@ -111,11 +152,12 @@ const Login = () => {
                 onChange={handleChange}
                 className={`form-input ${errors.password ? 'input-error' : ''}`}
                 placeholder="••••••••"
+                disabled={loading}
               />
               {errors.password && (
                 <p className="error-message">{errors.password}</p>
               )}
-              <p className="input-hint">Password must be at least 7 characters</p>
+              <p className="input-hint">7+ characters with uppercase, lowercase, and number</p>
             </div>
 
             {/* Remember Me & Forgot Password */}
@@ -128,8 +170,8 @@ const Login = () => {
             </div>
 
             {/* Submit Button */}
-            <button type="submit" className="submit-button">
-              Login
+            <button type="submit" className="submit-button" disabled={loading}>
+              {loading ? 'Logging in...' : 'Login'}
             </button>
           </form>
 
