@@ -23,10 +23,8 @@ const Signup = () => {
     const newErrors = {};
     if (!formData.name.trim()) {
       newErrors.name = 'Name is required';
-    } else if (formData.name.trim().length < 3) {
-      newErrors.name = 'Name must be at least 3 characters';
-    } else if (/\d/.test(formData.name)) {
-      newErrors.name = 'Name cannot contain numbers';
+    } else if (formData.name.trim().length < 2) {
+      newErrors.name = 'Name must be at least 2 characters';
     }
     if (!formData.email) {
       newErrors.email = 'Email is required';
@@ -35,13 +33,11 @@ const Signup = () => {
     }
     if (!formData.password) {
       newErrors.password = 'Password is required';
-    } else if (formData.password.length < 7) {
-      newErrors.password = 'Password must be at least 7 characters long';
-    } else if (!/(?=.*[a-z])/.test(formData.password)) {
-      newErrors.password = 'Password must contain at least one lowercase letter';
-    } else if (!/(?=.*[A-Z])/.test(formData.password)) {
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    } else if (!/[A-Z]/.test(formData.password)) {
       newErrors.password = 'Password must contain at least one uppercase letter';
-    } else if (!/(?=.*\d)/.test(formData.password)) {
+    } else if (!/[0-9]/.test(formData.password)) {
       newErrors.password = 'Password must contain at least one number';
     }
     if (!formData.confirmPassword) {
@@ -60,13 +56,15 @@ const Signup = () => {
     setServerError('');
     try {
       const result = await signupUser({
-        name: formData.name.trim(),
-        email: formData.email,
+        name:     formData.name.trim(),
+        email:    formData.email,
         password: formData.password,
       });
-      localStorage.setItem('token', result.data.token);
-      localStorage.setItem('user', JSON.stringify(result.data.user));
-      navigate('/home'); // → UserHomePage
+      // Support both response shapes: result.data.token OR result.data.data.token
+      const payload = result.data.data ?? result.data;
+      localStorage.setItem('token', payload.token);
+      localStorage.setItem('user', JSON.stringify(payload.user));
+      navigate('/homeUser');        // ← matches App.jsx route
     } catch (err) {
       if (err.response?.data?.errors) {
         const fieldErrors = {};
@@ -75,7 +73,9 @@ const Signup = () => {
         });
         setErrors(fieldErrors);
       } else {
-        setServerError(err.response?.data?.message || 'Signup failed. Please try again.');
+        setServerError(
+          err.response?.data?.message || 'Signup failed. Please try again.'
+        );
       }
     } finally {
       setLoading(false);
@@ -102,40 +102,46 @@ const Signup = () => {
 
             <div className="form-group">
               <label htmlFor="name" className="form-label">Full Name</label>
-              <input type="text" id="name" name="name" value={formData.name}
-                onChange={handleChange}
+              <input
+                type="text" id="name" name="name"
+                value={formData.name} onChange={handleChange}
                 className={`form-input ${errors.name ? 'input-error' : ''}`}
-                placeholder="Your full name" disabled={loading} />
+                placeholder="Your full name" disabled={loading}
+              />
               {errors.name && <p className="error-message">{errors.name}</p>}
-              <p className="input-hint">At least 3 characters, no numbers</p>
             </div>
 
             <div className="form-group">
               <label htmlFor="email" className="form-label">Email Address</label>
-              <input type="email" id="email" name="email" value={formData.email}
-                onChange={handleChange}
+              <input
+                type="email" id="email" name="email"
+                value={formData.email} onChange={handleChange}
                 className={`form-input ${errors.email ? 'input-error' : ''}`}
-                placeholder="your@email.com" disabled={loading} />
+                placeholder="your@email.com" disabled={loading}
+              />
               {errors.email && <p className="error-message">{errors.email}</p>}
             </div>
 
             <div className="form-group">
               <label htmlFor="password" className="form-label">Password</label>
-              <input type="password" id="password" name="password" value={formData.password}
-                onChange={handleChange}
+              <input
+                type="password" id="password" name="password"
+                value={formData.password} onChange={handleChange}
                 className={`form-input ${errors.password ? 'input-error' : ''}`}
-                placeholder="••••••••" disabled={loading} />
+                placeholder="••••••••" disabled={loading}
+              />
               {errors.password && <p className="error-message">{errors.password}</p>}
-              <p className="input-hint">7+ characters with uppercase, lowercase, and number</p>
+              <p className="input-hint">Min 6 chars with at least one uppercase letter and number</p>
             </div>
 
             <div className="form-group">
               <label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
-              <input type="password" id="confirmPassword" name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
+              <input
+                type="password" id="confirmPassword" name="confirmPassword"
+                value={formData.confirmPassword} onChange={handleChange}
                 className={`form-input ${errors.confirmPassword ? 'input-error' : ''}`}
-                placeholder="••••••••" disabled={loading} />
+                placeholder="••••••••" disabled={loading}
+              />
               {errors.confirmPassword && <p className="error-message">{errors.confirmPassword}</p>}
             </div>
 

@@ -1,15 +1,39 @@
-import React, { useState } from 'react';
-import PostCard from '../components/PostCard';
-import { dummyPosts, CULTURE_TAGS } from '../data/dummyDataPost';
-import './RecipesPage.css';
+import React, { useState, useEffect, useCallback } from "react";
+import PostCard from "../components/PostCard";
+import { getFeed } from "../api/postService";
+import useCultures from "../hooks/useCultures";
+import "./RecipesPage.css";
 
 export default function RecipesPage() {
-  const [cultureFilter, setCultureFilter] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all');
+  const [posts,         setPosts]         = useState([]);
+  const [typeFilter,    setTypeFilter]    = useState("all");
+  const [cultureFilter, setCultureFilter] = useState("");
+  const [loading,       setLoading]       = useState(true);
+  const [error,         setError]         = useState("");
+  const { cultures }                      = useCultures();
 
-  const posts = dummyPosts
-    .filter(p => typeFilter === 'all' || p.type === typeFilter)
-    .filter(p => !cultureFilter || p.culture === cultureFilter);
+  const load = useCallback(async () => {
+    setLoading(true); setError("");
+    try {
+      const params = {};
+      if (typeFilter !== "all") params.type       = typeFilter;
+      if (cultureFilter)        params.culture_id = cultureFilter;
+      const res = await getFeed(params);
+      setPosts(res.data.data.posts || []);
+    } catch {
+      setError("Could not load posts.");
+    } finally {
+      setLoading(false);
+    }
+  }, [typeFilter, cultureFilter]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleLikeChange = (postId, liked, count) => {
+    setPosts((prev) =>
+      prev.map((p) => p.post_id === postId ? { ...p, liked_by_me: liked, likes_count: count } : p)
+    );
+  };
 
   return (
     <div className="rpage">
@@ -24,17 +48,16 @@ export default function RecipesPage() {
           </div>
         </div>
 
-        {/* Type + culture filter row */}
         <div className="rpage-filters">
           <div className="rpage-type-tabs">
             {[
-              { id: 'all',    label: 'All',    emoji: '🍽' },
-              { id: 'recipe', label: 'Recipes', emoji: '📖' },
-              { id: 'reel',   label: 'Reels',   emoji: '▶' },
-            ].map(f => (
+              { id: "all",    label: "All",     emoji: "🍽" },
+              { id: "recipe", label: "Recipes", emoji: "📖" },
+              { id: "reel",   label: "Reels",   emoji: "▶"  },
+            ].map((f) => (
               <button
                 key={f.id}
-                className={`rpage-tab ${typeFilter === f.id ? 'active' : ''}`}
+                className={`rpage-tab ${typeFilter === f.id ? "active" : ""}`}
                 onClick={() => setTypeFilter(f.id)}
               >
                 {f.emoji} {f.label}
@@ -43,39 +66,36 @@ export default function RecipesPage() {
           </div>
         </div>
 
-        {/* Culture chips */}
         <div className="rpage-chips">
-          <button
-            className={`rpage-chip ${!cultureFilter ? 'active' : ''}`}
-            onClick={() => setCultureFilter('')}
-          >
+          <button className={`rpage-chip ${!cultureFilter ? "active" : ""}`} onClick={() => setCultureFilter("")}>
             All Cultures
           </button>
-          {CULTURE_TAGS.map(t => (
+          {cultures.map((c) => (
             <button
-              key={t}
-              className={`rpage-chip ${cultureFilter === t ? 'active' : ''}`}
-              onClick={() => setCultureFilter(t)}
+              key={c.culture_id}
+              className={`rpage-chip ${cultureFilter === String(c.culture_id) ? "active" : ""}`}
+              onClick={() => setCultureFilter(String(c.culture_id))}
             >
-              {t}
+              {c.culture_name}
             </button>
           ))}
         </div>
 
-        {/* Results count */}
-        <p className="rpage-count">{posts.length} post{posts.length !== 1 ? 's' : ''} found</p>
+        {!loading && <p className="rpage-count">{posts.length} post{posts.length !== 1 ? "s" : ""} found</p>}
 
-        <div className="rpage-feed">
-          {posts.length === 0
-            ? (
-              <div className="rpage-empty">
-                <img src="https://api.iconify.design/noto/fork-and-knife-with-plate.svg" alt="" width="40" height="40" />
-                <p>No recipes found for this filter.</p>
-              </div>
-            )
-            : posts.map(p => <PostCard key={p.id} post={p} />)
-          }
-        </div>
+        {loading && <div className="rpage-empty"><p>Loading…</p></div>}
+        {!loading && error && <div className="rpage-empty"><p>{error}</p></div>}
+        {!loading && !error && (
+          <div className="rpage-feed">
+            {posts.length === 0
+              ? <div className="rpage-empty">
+                  <img src="https://api.iconify.design/noto/fork-and-knife-with-plate.svg" alt="" width="40" height="40" />
+                  <p>No posts found for this filter.</p>
+                </div>
+              : posts.map((p) => <PostCard key={p.post_id} post={p} onLikeChange={handleLikeChange} />)
+            }
+          </div>
+        )}
       </div>
     </div>
   );

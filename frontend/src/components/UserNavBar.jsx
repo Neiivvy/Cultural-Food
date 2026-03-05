@@ -1,44 +1,48 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import './UserNavBar.css';
-
-/* ── Inline SVG icons (no dependency needed) ── */
-const HomeIcon    = ({ filled }) => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'}
+/* eslint-disable no-unused-vars */
+/* ── Inline SVG icons ── */
+const HomeIcon = ({ filled }) => (
+  <svg width="22" height="22" viewBox="0 0 24 24"
+    fill={filled ? 'currentColor' : 'none'}
     stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
     <polyline points="9 22 9 12 15 12 15 22"/>
   </svg>
 );
-const RecipeIcon  = ({ filled }) => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'}
+const RecipeIcon = ({ filled }) => (
+  <svg width="22" height="22" viewBox="0 0 24 24"
+    fill={filled ? 'currentColor' : 'none'}
     stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/>
     <path d="M7 2v20"/>
     <path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/>
   </svg>
 );
-const ChatIcon    = ({ filled }) => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'}
+const ChatIcon = ({ filled }) => (
+  <svg width="22" height="22" viewBox="0 0 24 24"
+    fill={filled ? 'currentColor' : 'none'}
     stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
   </svg>
 );
-const PlusIcon    = () => (
+const PlusIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
     stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <line x1="12" y1="5" x2="12" y2="19"/>
     <line x1="5" y1="12" x2="19" y2="12"/>
   </svg>
 );
-const UserIcon    = ({ filled }) => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'}
+const UserIcon = ({ filled }) => (
+  <svg width="22" height="22" viewBox="0 0 24 24"
+    fill={filled ? 'currentColor' : 'none'}
     stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
     <circle cx="12" cy="7" r="4"/>
   </svg>
 );
-const LogoutIcon  = () => (
+const LogoutIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
     stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
@@ -53,38 +57,37 @@ const ChevronIcon = () => (
   </svg>
 );
 
+// ── Nav items — all paths MUST match App.jsx routes ──────────────
 const NAV_ITEMS = [
-  { path: '/home',      label: 'Home',      Icon: HomeIcon },
-  { path: '/recipes',   label: 'Recipes',   Icon: RecipeIcon },
-  { path: '/add',       label: 'Add',       isAdd: true },
-  { path: '/questions', label: 'Questions', Icon: ChatIcon },
-  { path: '/profile',   label: 'Profile',   Icon: UserIcon },
+  { path: '/homeUser',   label: 'Home',      Icon: HomeIcon   },
+  { path: '/recipes',    label: 'Recipes',   Icon: RecipeIcon },
+  { path: '/add',        label: 'Add',       isAdd: true      },
+  { path: '/questions',  label: 'Questions', Icon: ChatIcon   },
+  { path: '/profile',    label: 'Profile',   Icon: UserIcon   },
 ];
 
 export default function UserNavBar() {
-  const location  = useLocation();
-  const navigate  = useNavigate();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [dropOpen, setDropOpen] = useState(false);
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    navigate('/login');
+    navigate('/');          // ← back to public HomePage, NOT /login
   };
 
   const isActive = (path) => location.pathname === path;
 
   return (
     <>
-      {/* ════════════════════════════════════════
-          DESKTOP top navbar
-      ════════════════════════════════════════ */}
+      {/* ════════════════ DESKTOP TOP NAV ════════════════ */}
       <nav className="unav-desktop">
         <div className="unav-inner">
 
-          {/* Brand */}
-          <Link to="/home" className="unav-brand">
+          {/* Brand → takes user to their home feed */}
+          <Link to="/homeUser" className="unav-brand">
             <span className="unav-logo" aria-hidden="true">
               <img
                 src="https://api.iconify.design/noto/bowl-with-spoon.svg"
@@ -100,18 +103,19 @@ export default function UserNavBar() {
           </Link>
 
           {/* Centre nav links */}
-<div className="unav-links">
-  {NAV_ITEMS.filter(n => !n.isAdd).map(({ path, label, Icon: NavIcon }) => (
-    <Link
-      key={path}
-      to={path}
-      className={`unav-link ${isActive(path) ? 'active' : ''}`}
-    >
-      {NavIcon({ filled: isActive(path) })}
-      <span>{label}</span>
-    </Link>
-  ))}
-</div>
+          <div className="unav-links">
+            {NAV_ITEMS.filter(n => !n.isAdd).map(({ path, label, Icon }) => (
+              <Link
+                key={path}
+                to={path}
+                className={`unav-link ${isActive(path) ? 'active' : ''}`}
+              >
+                <Icon filled={isActive(path)} />
+                <span>{label}</span>
+              </Link>
+            ))}
+          </div>
+
           {/* Right side */}
           <div className="unav-right">
             <Link to="/add" className="unav-add-btn">
@@ -126,7 +130,10 @@ export default function UserNavBar() {
                 aria-label="User menu"
               >
                 <img
-                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'U')}&background=ec4899&color=fff&size=36`}
+                  src={
+                    user.profile_picture ||
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'U')}&background=ec4899&color=fff&size=36`
+                  }
                   alt="avatar"
                   className="unav-avatar-img"
                 />
@@ -137,7 +144,10 @@ export default function UserNavBar() {
                 <div className="unav-dropdown">
                   <div className="unav-drop-user">
                     <img
-                      src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'U')}&background=ec4899&color=fff&size=48`}
+                      src={
+                        user.profile_picture ||
+                        `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'U')}&background=ec4899&color=fff&size=48`
+                      }
                       alt=""
                       className="unav-drop-avatar"
                     />
@@ -160,10 +170,8 @@ export default function UserNavBar() {
         </div>
       </nav>
 
-      {/* ════════════════════════════════════════
-          MOBILE bottom navbar
-      ════════════════════════════════════════ */}
-    <nav className="unav-mobile">
+      {/* ════════════════ MOBILE BOTTOM NAV ════════════════ */}
+      <nav className="unav-mobile">
         {NAV_ITEMS.map(({ path, label, Icon, isAdd }) => (
           <Link
             key={path}
@@ -174,7 +182,7 @@ export default function UserNavBar() {
               ? <PlusIcon />
               : (
                 <>
-                  {Icon && <Icon filled={isActive(path)} />}
+                  <Icon filled={isActive(path)} />
                   <span className="unav-mob-label">{label}</span>
                 </>
               )
