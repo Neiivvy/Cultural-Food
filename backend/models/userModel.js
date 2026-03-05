@@ -13,11 +13,24 @@ const User = {
   // Find user by ID
   findById: async (userId) => {
     const [rows] = await db.execute(
-      "SELECT user_id, name, email, created_at FROM users WHERE user_id = ? LIMIT 1",
+      `SELECT user_id, name, email, bio, profile_picture, created_at 
+     FROM users 
+     WHERE user_id = ? LIMIT 1`,
       [userId]
     );
     return rows[0] || null;
   },
+
+  //to update the user
+  updateProfile: async ({ userId, bio, profilePicture }) => {
+  const [result] = await db.execute(
+    `UPDATE users 
+     SET bio = ?, profile_picture = ?
+     WHERE user_id = ?`,
+    [bio, profilePicture, userId]
+  );
+  return result;
+},
 
   // Create new user
   create: async ({ name, email, hashedPassword }) => {
