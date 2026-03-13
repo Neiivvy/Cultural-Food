@@ -3,55 +3,66 @@ import { Link, useNavigate } from 'react-router-dom';
 import { loginUser } from '../api/authService';
 import './Login.css';
 
-const Login = () => {
+export default function Login() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({ email: '', password: '' });
-  const [errors, setErrors] = useState({});
+  const [formData, setFormData]       = useState({ email: '', password: '' });
+  const [errors,   setErrors]         = useState({});
   const [serverError, setServerError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading,  setLoading]        = useState(false);
+
+  const validate = (data) => {
+    const e = {};
+    if (!data.email.trim())
+      e.email = 'Email is required';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email))
+      e.email = 'Enter a valid email address';
+
+    if (!data.password)
+      e.password = 'Password is required';
+    else if (data.password.length < 6)
+      e.password = 'Password must be at least 6 characters';
+
+    return e;
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const next = { ...formData, [name]: value };
+    setFormData(next);
+    // Only clear the field-level error as user types, NOT the server error
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
-    if (serverError) setServerError('');
   };
 
-  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-
-  const validateForm = () => {
-    const newErrors = {};
-    if (!formData.email) {
-      newErrors.email = 'Email is required';
-    } else if (!validateEmail(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
-    }
-    if (!formData.password) {
-      newErrors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
-    }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const handleBlur = (e) => {
+    const { name } = e.target;
+    const errs = validate(formData);
+    if (errs[name]) setErrors(prev => ({ ...prev, [name]: errs[name] }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    const errs = validate(formData);
+    setErrors(errs);
+    if (Object.keys(errs).length) return;
+
     setLoading(true);
-    setServerError('');
+    setServerError(''); // clear only when user actively retries
     try {
       const result = await loginUser({ email: formData.email, password: formData.password });
-      // Support both response shapes: result.data.token OR result.data.data.token
-      const payload = result.data.data ?? result.data;
+      const payload = result.data?.data;
+      // Guard: if no token in response, treat as failed login
+      if (!payload?.token) {
+        setServerError('Invalid email or password.');
+        return;
+      }
       localStorage.setItem('token', payload.token);
       localStorage.setItem('user', JSON.stringify(payload.user));
-      navigate('/homeUser');        // ← matches App.jsx route
+      navigate('/homeUser');
     } catch (err) {
       setServerError(
         err.response?.data?.message ||
         err.response?.data?.errors?.[0]?.message ||
-        'Login failed. Please check your credentials.'
+        'Invalid email or password.'
       );
     } finally {
       setLoading(false);
@@ -59,76 +70,82 @@ const Login = () => {
   };
 
   return (
-    <div className="login-page">
-      <div className="login-container">
-        <div className="brand-section">
-          <Link to="/" className="brand-link">
-            <h1 className="brand-title">
-              <span className="brand-primary">Khana</span>{' '}
-              <span className="brand-secondary">Sanskriti</span>
+    <div className="auth-page">
+      <div className="auth-wrap">
+
+        <div className="auth-brand">
+          <Link to="/" className="auth-brand-link">
+            <span>🍜</span>
+            <h1 className="auth-brand-title">
+              <span className="brand-p">Khana</span>
+              <span className="brand-s"> Sanskriti</span>
             </h1>
           </Link>
-          <p className="brand-subtitle">Welcome back! Please login to your account.</p>
+          <p className="auth-brand-sub">Welcome back! Log in to your account.</p>
         </div>
 
-        <div className="form-card">
-          <h2 className="form-title">Login</h2>
-          <form onSubmit={handleSubmit} className="auth-form">
-            {serverError && <div className="server-error-banner">{serverError}</div>}
+        <div className="auth-card">
+          <h2 className="auth-card-title">Login</h2>
 
-            <div className="form-group">
-              <label htmlFor="email" className="form-label">Email Address</label>
+          {serverError && (
+            <div className="auth-server-error">⚠ {serverError}</div>
+          )}
+
+          <form onSubmit={handleSubmit} className="auth-form" noValidate>
+
+            <div className="auth-field">
+              <label htmlFor="email" className="auth-label">Email Address</label>
               <input
                 type="email" id="email" name="email"
-                value={formData.email} onChange={handleChange}
-                className={`form-input ${errors.email ? 'input-error' : ''}`}
-                placeholder="your@email.com" disabled={loading}
+                autoComplete="email"
+                value={formData.email}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                className={`auth-input ${errors.email ? 'input-error' : ''}`}
+                placeholder="you@example.com"
+                disabled={loading}
               />
-              {errors.email && <p className="error-message">{errors.email}</p>}
+              {errors.email && <p className="auth-field-error">⚠ {errors.email}</p>}
             </div>
 
-            <div className="form-group">
-              <label htmlFor="password" className="form-label">Password</label>
+            <div className="auth-field">
+              <label htmlFor="password" className="auth-label">Password</label>
               <input
                 type="password" id="password" name="password"
-                value={formData.password} onChange={handleChange}
-                className={`form-input ${errors.password ? 'input-error' : ''}`}
-                placeholder="••••••••" disabled={loading}
+                autoComplete="current-password"
+                value={formData.password}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                className={`auth-input ${errors.password ? 'input-error' : ''}`}
+                placeholder="••••••••"
+                disabled={loading}
               />
-              {errors.password && <p className="error-message">{errors.password}</p>}
+              {errors.password && <p className="auth-field-error">⚠ {errors.password}</p>}
             </div>
 
-            <div className="form-options">
-              <label className="checkbox-label">
-                <input type="checkbox" className="checkbox-input" />
-                <span className="checkbox-text">Remember me</span>
+            <div className="auth-row">
+              <label className="auth-check">
+                <input type="checkbox" /> Remember me
               </label>
-              <a href="#" className="forgot-link">Forgot password?</a>
+              <a href="#" className="auth-forgot">Forgot password?</a>
             </div>
 
-            <button type="submit" className="submit-button" disabled={loading}>
-              {loading ? 'Logging in...' : 'Login'}
+            <button type="submit" className="auth-submit" disabled={loading}>
+              {loading ? 'Logging in…' : 'Login'}
             </button>
           </form>
 
-          <div className="divider">
-            <div className="divider-line"></div>
-            <span className="divider-text">or</span>
-            <div className="divider-line"></div>
-          </div>
+          <div className="auth-divider"><span>or</span></div>
 
-          <p className="footer-text">
-            Don't have an account?{' '}
-            <Link to="/signup" className="footer-link">Sign up</Link>
+          <p className="auth-switch">
+            Don't have an account? <Link to="/signup" className="auth-link">Sign up</Link>
           </p>
         </div>
 
-        <div className="back-home">
-          <Link to="/" className="back-link">← Back to Home</Link>
+        <div className="auth-back">
+          <Link to="/" className="auth-back-link">← Back to Home</Link>
         </div>
       </div>
     </div>
   );
-};
-
-export default Login;
+}

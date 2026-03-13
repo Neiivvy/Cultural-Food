@@ -1,81 +1,87 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { signupUser } from '../api/authService';
-import './Signup.css';
+import './Login.css';
 
-const Signup = () => {
+export default function Signup() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({ name: '', email: '', password: '', confirmPassword: '' });
-  const [errors, setErrors] = useState({});
+  const [formData, setFormData]       = useState({ name: '', email: '', password: '', confirmPassword: '' });
+  const [errors,   setErrors]         = useState({});
   const [serverError, setServerError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading,  setLoading]        = useState(false);
+
+  const validate = (data) => {
+    const e = {};
+
+    if (!data.name.trim())
+      e.name = 'Full name is required';
+    else if (data.name.trim().length < 2)
+      e.name = 'Name must be at least 2 characters';
+
+    if (!data.email.trim())
+      e.email = 'Email is required';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email))
+      e.email = 'Enter a valid email address';
+
+    if (!data.password)
+      e.password = 'Password is required';
+    else if (data.password.length < 6)
+      e.password = 'Password must be at least 6 characters';
+    else if (!/[A-Z]/.test(data.password))
+      e.password = 'Password must contain at least one uppercase letter';
+    else if (!/[0-9]/.test(data.password))
+      e.password = 'Password must contain at least one number';
+
+    if (!data.confirmPassword)
+      e.confirmPassword = 'Please confirm your password';
+    else if (data.password !== data.confirmPassword)
+      e.confirmPassword = 'Passwords do not match';
+
+    return e;
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const next = { ...formData, [name]: value };
+    setFormData(next);
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
-    if (serverError) setServerError('');
+    // Re-check confirm when password changes
+    if (name === 'password' && errors.confirmPassword) {
+      setErrors(prev => ({
+        ...prev,
+        confirmPassword: value !== next.confirmPassword ? 'Passwords do not match' : ''
+      }));
+    }
+    setServerError('');
   };
 
-  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-
-  const validateForm = () => {
-    const newErrors = {};
-    if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
-    } else if (formData.name.trim().length < 2) {
-      newErrors.name = 'Name must be at least 2 characters';
-    }
-    if (!formData.email) {
-      newErrors.email = 'Email is required';
-    } else if (!validateEmail(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
-    }
-    if (!formData.password) {
-      newErrors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
-    } else if (!/[A-Z]/.test(formData.password)) {
-      newErrors.password = 'Password must contain at least one uppercase letter';
-    } else if (!/[0-9]/.test(formData.password)) {
-      newErrors.password = 'Password must contain at least one number';
-    }
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
-    } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
-    }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const handleBlur = (e) => {
+    const { name } = e.target;
+    const errs = validate(formData);
+    if (errs[name]) setErrors(prev => ({ ...prev, [name]: errs[name] }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    const errs = validate(formData);
+    setErrors(errs);
+    if (Object.keys(errs).length) return;
+
     setLoading(true);
     setServerError('');
     try {
-      const result = await signupUser({
-        name:     formData.name.trim(),
-        email:    formData.email,
-        password: formData.password,
-      });
-      // Support both response shapes: result.data.token OR result.data.data.token
+      const result  = await signupUser({ name: formData.name.trim(), email: formData.email, password: formData.password });
       const payload = result.data.data ?? result.data;
       localStorage.setItem('token', payload.token);
       localStorage.setItem('user', JSON.stringify(payload.user));
-      navigate('/homeUser');        // ← matches App.jsx route
+      navigate('/homeUser');
     } catch (err) {
       if (err.response?.data?.errors) {
-        const fieldErrors = {};
-        err.response.data.errors.forEach(({ field, message }) => {
-          fieldErrors[field] = message;
-        });
-        setErrors(fieldErrors);
+        const fe = {};
+        err.response.data.errors.forEach(({ field, message }) => { fe[field] = message; });
+        setErrors(fe);
       } else {
-        setServerError(
-          err.response?.data?.message || 'Signup failed. Please try again.'
-        );
+        setServerError(err.response?.data?.message || 'Signup failed. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -83,91 +89,108 @@ const Signup = () => {
   };
 
   return (
-    <div className="signup-page">
-      <div className="signup-container">
-        <div className="brand-section">
-          <Link to="/" className="brand-link">
-            <h1 className="brand-title">
-              <span className="brand-primary">Khana</span>{' '}
-              <span className="brand-secondary">Sanskriti</span>
+    <div className="auth-page">
+      <div className="auth-wrap">
+
+        <div className="auth-brand">
+          <Link to="/" className="auth-brand-link">
+            <span>🍜</span>
+            <h1 className="auth-brand-title">
+              <span className="brand-p">Khana</span>
+              <span className="brand-s"> Sanskriti</span>
             </h1>
           </Link>
-          <p className="brand-subtitle">Create your account to get started.</p>
+          <p className="auth-brand-sub">Create your account to join the community.</p>
         </div>
 
-        <div className="form-card">
-          <h2 className="form-title">Sign Up</h2>
-          <form onSubmit={handleSubmit} className="auth-form">
-            {serverError && <div className="server-error-banner">{serverError}</div>}
+        <div className="auth-card">
+          <h2 className="auth-card-title">Sign Up</h2>
 
-            <div className="form-group">
-              <label htmlFor="name" className="form-label">Full Name</label>
+          {serverError && (
+            <div className="auth-server-error">⚠ {serverError}</div>
+          )}
+
+          <form onSubmit={handleSubmit} className="auth-form" noValidate>
+
+            <div className="auth-field">
+              <label htmlFor="name" className="auth-label">Full Name</label>
               <input
                 type="text" id="name" name="name"
-                value={formData.name} onChange={handleChange}
-                className={`form-input ${errors.name ? 'input-error' : ''}`}
-                placeholder="Your full name" disabled={loading}
+                autoComplete="name"
+                value={formData.name}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                className={`auth-input ${errors.name ? 'input-error' : ''}`}
+                placeholder="Your full name"
+                disabled={loading}
               />
-              {errors.name && <p className="error-message">{errors.name}</p>}
+              {errors.name && <p className="auth-field-error">⚠ {errors.name}</p>}
             </div>
 
-            <div className="form-group">
-              <label htmlFor="email" className="form-label">Email Address</label>
+            <div className="auth-field">
+              <label htmlFor="email" className="auth-label">Email Address</label>
               <input
                 type="email" id="email" name="email"
-                value={formData.email} onChange={handleChange}
-                className={`form-input ${errors.email ? 'input-error' : ''}`}
-                placeholder="your@email.com" disabled={loading}
+                autoComplete="email"
+                value={formData.email}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                className={`auth-input ${errors.email ? 'input-error' : ''}`}
+                placeholder="you@example.com"
+                disabled={loading}
               />
-              {errors.email && <p className="error-message">{errors.email}</p>}
+              {errors.email && <p className="auth-field-error">⚠ {errors.email}</p>}
             </div>
 
-            <div className="form-group">
-              <label htmlFor="password" className="form-label">Password</label>
+            <div className="auth-field">
+              <label htmlFor="password" className="auth-label">Password</label>
               <input
                 type="password" id="password" name="password"
-                value={formData.password} onChange={handleChange}
-                className={`form-input ${errors.password ? 'input-error' : ''}`}
-                placeholder="••••••••" disabled={loading}
+                autoComplete="new-password"
+                value={formData.password}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                className={`auth-input ${errors.password ? 'input-error' : ''}`}
+                placeholder="••••••••"
+                disabled={loading}
               />
-              {errors.password && <p className="error-message">{errors.password}</p>}
-              <p className="input-hint">Min 6 chars with at least one uppercase letter and number</p>
+              {errors.password
+                ? <p className="auth-field-error">⚠ {errors.password}</p>
+                : <p className="auth-hint">Min 6 chars · 1 uppercase · 1 number</p>
+              }
             </div>
 
-            <div className="form-group">
-              <label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
+            <div className="auth-field">
+              <label htmlFor="confirmPassword" className="auth-label">Confirm Password</label>
               <input
                 type="password" id="confirmPassword" name="confirmPassword"
-                value={formData.confirmPassword} onChange={handleChange}
-                className={`form-input ${errors.confirmPassword ? 'input-error' : ''}`}
-                placeholder="••••••••" disabled={loading}
+                autoComplete="new-password"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                className={`auth-input ${errors.confirmPassword ? 'input-error' : ''}`}
+                placeholder="••••••••"
+                disabled={loading}
               />
-              {errors.confirmPassword && <p className="error-message">{errors.confirmPassword}</p>}
+              {errors.confirmPassword && <p className="auth-field-error">⚠ {errors.confirmPassword}</p>}
             </div>
 
-            <button type="submit" className="submit-button" disabled={loading}>
-              {loading ? 'Creating account...' : 'Create Account'}
+            <button type="submit" className="auth-submit" disabled={loading}>
+              {loading ? 'Creating account…' : 'Create Account'}
             </button>
           </form>
 
-          <div className="divider">
-            <div className="divider-line"></div>
-            <span className="divider-text">or</span>
-            <div className="divider-line"></div>
-          </div>
+          <div className="auth-divider"><span>or</span></div>
 
-          <p className="footer-text">
-            Already have an account?{' '}
-            <Link to="/login" className="footer-link">Login</Link>
+          <p className="auth-switch">
+            Already have an account? <Link to="/login" className="auth-link">Login</Link>
           </p>
         </div>
 
-        <div className="back-home">
-          <Link to="/" className="back-link">← Back to Home</Link>
+        <div className="auth-back">
+          <Link to="/" className="auth-back-link">← Back to Home</Link>
         </div>
       </div>
     </div>
   );
-};
-
-export default Signup;
+}
