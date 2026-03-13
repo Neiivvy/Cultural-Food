@@ -138,3 +138,29 @@
   color: var(--text-3);
   font-size: 0.925rem;
 }
+
+/* Result count line */
+.uhome-count {
+  font-size: 0.8rem; color: var(--text-3); font-weight: 600;
+  margin-bottom: 0.875rem; padding-left: 2px;
+}
+/* Retry button */
+.uhome-retry-btn {
+  padding: 0.45rem 1.1rem; background: var(--pink); color: #fff;
+  border: none; border-radius: var(--r-md); font-size: 0.85rem;
+  font-weight: 700; cursor: pointer; transition: background 0.18s;
+}
+.uhome-retry-btn:hover { background: var(--pink-dark); }
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .uhome-hero-inner { padding: 1.25rem 1rem; }
+  .uhome-title { font-size: 1.5rem; }
+  .uhome-type-tabs { gap: 0.3rem; }
+  .uhome-tab { font-size: 0.78rem; padding: 0.45rem 0.7rem; }
+  .uhome-content { padding: 0 0.75rem 5rem; }
+  .uhome-chips { gap: 0.35rem; }
+  .uhome-chip { font-size: 0.72rem; padding: 4px 10px; }
+  .uhome-culture-select { width: 100%; margin-top: 0.5rem; }
+  .uhome-filters { flex-direction: column; gap: 0.5rem; }
+}

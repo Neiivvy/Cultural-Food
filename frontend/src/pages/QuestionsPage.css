@@ -24,12 +24,16 @@
 .qpage-ask-form {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--r-lg); padding: 1.1rem; margin-bottom: 1.25rem;
-  box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 0.75rem;
+  box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 1.1rem;
 }
 .qpage-ask-input {
   width: 100%; padding: 0.7rem 0.9rem; border: 1.5px solid var(--border);
   border-radius: var(--r-md); font-size: 0.9rem; font-family: inherit;
-  resize: vertical; outline: none; transition: border-color 0.18s;
+  resize: vertical; outline: none; transition: border-color 0.18s; box-sizing: border-box;
+}
+textarea.qpage-ask-input {
+  min-height: 120px;
+  line-height: 1.65;
 }
 .qpage-ask-input:focus { border-color: var(--pink); }
 .qpage-ask-actions { display: flex; gap: 0.5rem; }
@@ -84,7 +88,7 @@
 }
 
 .qpage-footer {
-  display: flex; align-items: center; gap: 0.75rem;
+  display: flex; align-items: center; gap: 1.1rem;
   padding-top: 0.75rem; border-top: 1px solid var(--border);
 }
 .qpage-stat {
@@ -149,5 +153,76 @@
 
 .qpage-empty {
   display: flex; flex-direction: column; align-items: center;
-  gap: 0.75rem; padding: 3.5rem 0; color: var(--text-3); font-size: 0.925rem;
+  gap: 1.1rem; padding: 3.5rem 0; color: var(--text-3); font-size: 0.925rem;
+}
+
+/* Culture tag on question card */
+.qpage-culture-tag {
+  display: inline-block; padding: 0.18rem 0.6rem;
+  background: var(--pink-muted); color: var(--pink-dark);
+  border-radius: 20px; font-size: 0.7rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+
+/* Question description — show in full; long ones handled with Read more in JSX */
+.qpage-q-desc {
+  font-size: 0.875rem; color: var(--text-2);
+  line-height: 1.65; margin-bottom: 0.875rem;
+  white-space: pre-wrap; word-break: break-word;
+}
+.qpage-read-more {
+  background: none; border: none; padding: 0;
+  font-size: 0.8rem; font-weight: 700; color: var(--pink);
+  cursor: pointer; margin-top: 2px; transition: opacity 0.15s; display: block;
+}
+.qpage-read-more:hover { opacity: 0.7; }
+/* Mention highlight in answers */
+.qpage-mention {
+  color: var(--pink); font-weight: 700;
+  background: var(--pink-muted); border-radius: 4px; padding: 0 3px;
+}
+
+/* Single-line title input in ask form */
+.qpage-ask-input-single {
+  padding: 0.6rem 0.85rem;
+}
+
+/* Ask form select */
+.qpage-ask-select {
+  padding: 0.52rem 0.85rem; cursor: pointer;
+  background: var(--surface); appearance: auto;
+}
+
+/* Error inside ask form */
+.qpage-ask-err {
+  color: #dc2626; font-size: 0.825rem; font-weight: 600;
+  padding: 0.4rem 0.6rem; background: #fef2f2;
+  border-radius: var(--r-sm); border: 1px solid #fecaca;
+}
+
+/* Ask form field wrapper with label */
+.qpage-ask-field { display: flex; flex-direction: column; gap: 0.3rem; }
+.qpage-ask-label { font-size: 0.82rem; font-weight: 700; color: var(--text-1); }
+.qpage-ask-optional { font-weight: 400; color: var(--text-3); font-size: 0.78rem; }
+.qpage-req { color: var(--pink); }
+
+/* Description wrap with read more */
+.qpage-q-desc-wrap { margin-bottom: 0.875rem; }
+
+/* Success banner */
+.qpage-success-banner {
+  background: #f0fdf4; border: 1px solid #86efac; color: #166534;
+  border-radius: var(--r-md); padding: 0.65rem 1rem;
+  font-size: 0.875rem; font-weight: 600; margin-bottom: 1rem;
+  animation: fadeUp 0.25s ease;
+}
+
+/* Ans name hover */
+.qpage-ans-name:hover { color: var(--pink); }
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .qpage-container { padding: 1rem 0.75rem 5rem; flex-direction: column; }
+  .qpage-sidebar { width: 100%; position: static; }
+  .qpage-list { gap: 0.75rem; }
 }

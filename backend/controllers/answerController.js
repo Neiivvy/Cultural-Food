@@ -1,5 +1,7 @@
-import Answer   from "../models/answerModel.js";
-import Question from "../models/questionModel.js";
+import Answer        from "../models/answerModel.js";
+import Question      from "../models/questionModel.js";
+import Notification  from "../models/notificationModel.js";
+import db            from "../config/db.js";
 
 // POST /api/questions/:id/answers
 export const addAnswer = async (req, res) => {
@@ -19,6 +21,18 @@ export const addAnswer = async (req, res) => {
     });
 
     const answer = await Answer.findById(answerId);
+
+    // Notify question owner
+    const [actor] = await db.execute("SELECT name FROM users WHERE user_id = ? LIMIT 1", [req.user.userId]);
+    const name = actor[0]?.name || "Someone";
+    await Notification.create({
+      recipientId: q.user_id,
+      actorId:     req.user.userId,
+      type:        "answer",
+      questionId:  Number(req.params.id),
+      message:     `${name} answered your question: "${q.title.slice(0, 40)}"`,
+    });
+
     return res.status(201).json({ success: true, message: "Answer posted.", data: { answer } });
   } catch (err) {
     console.error("addAnswer error:", err);

@@ -1,13 +1,14 @@
 import db from "../config/db.js";
 
 const Post = {
-  // Paginated feed with author info + likes count
-  getFeed: async ({ limit = 20, offset = 0, cultureId = null, type = null } = {}) => {
-    let where  = [];
-    let params = [];
+  // Paginated feed with author info + likes + comment count
+  getFeed: async ({ limit = 20, offset = 0, cultureId = null, type = null, userId = null } = {}) => {
+    const where  = [];
+    const params = [];
 
-    if (cultureId) { where.push("p.culture_id = ?");  params.push(cultureId); }
-    if (type)      { where.push("p.post_type  = ?");  params.push(type); }
+    if (cultureId) { where.push("p.culture_id = ?"); params.push(cultureId); }
+    if (type)      { where.push("p.post_type  = ?"); params.push(type); }
+    if (userId)    { where.push("p.user_id    = ?"); params.push(userId); }
 
     const whereSQL = where.length ? `WHERE ${where.join(" AND ")}` : "";
 
@@ -15,15 +16,16 @@ const Post = {
       `SELECT p.post_id, p.title, p.description, p.media_url, p.post_type, p.created_at,
               u.user_id AS author_id, u.name AS author_name, u.profile_picture,
               c.culture_name,
-              COUNT(DISTINCT pl.like_id) AS likes_count,
+              COUNT(DISTINCT pl.like_id)   AS likes_count,
               COUNT(DISTINCT cm.comment_id) AS comments_count
        FROM   posts p
-       JOIN   users u  ON p.user_id    = u.user_id
-       LEFT JOIN cultures c  ON p.culture_id = c.culture_id
-       LEFT JOIN post_likes pl ON p.post_id  = pl.post_id
-       LEFT JOIN comments   cm ON p.post_id  = cm.post_id
+       JOIN   users u   ON p.user_id    = u.user_id
+       LEFT JOIN cultures c   ON p.culture_id = c.culture_id
+       LEFT JOIN post_likes pl ON p.post_id   = pl.post_id
+       LEFT JOIN comments   cm ON p.post_id   = cm.post_id
        ${whereSQL}
-       GROUP BY p.post_id, u.user_id, c.culture_name
+       GROUP BY p.post_id, p.title, p.description, p.media_url, p.post_type, p.created_at,
+                u.user_id, u.name, u.profile_picture, c.culture_name
        ORDER BY p.created_at DESC
        LIMIT ? OFFSET ?`,
       [...params, limit, offset]
@@ -31,7 +33,7 @@ const Post = {
     return rows;
   },
 
-  // Single post with full detail
+  // Single post detail
   findById: async (postId) => {
     const [rows] = await db.execute(
       `SELECT p.post_id, p.title, p.description, p.media_url, p.post_type, p.created_at,
@@ -39,11 +41,12 @@ const Post = {
               c.culture_name,
               COUNT(DISTINCT pl.like_id) AS likes_count
        FROM   posts p
-       JOIN   users u ON p.user_id    = u.user_id
+       JOIN   users u   ON p.user_id    = u.user_id
        LEFT JOIN cultures c   ON p.culture_id = c.culture_id
        LEFT JOIN post_likes pl ON p.post_id   = pl.post_id
        WHERE  p.post_id = ?
-       GROUP BY p.post_id, u.user_id, c.culture_name`,
+       GROUP BY p.post_id, p.title, p.description, p.media_url, p.post_type, p.created_at,
+                u.user_id, u.name, u.profile_picture, c.culture_name`,
       [postId]
     );
     return rows[0] || null;
@@ -72,7 +75,10 @@ const Post = {
     if (!sets.length) return false;
 
     values.push(postId);
-    await db.execute(`UPDATE posts SET ${sets.join(", ")} WHERE post_id = ?`, values);
+    await db.execute(
+      `UPDATE posts SET ${sets.join(", ")} WHERE post_id = ?`,
+      values
+    );
     return true;
   },
 
@@ -88,7 +94,7 @@ const Post = {
     return rows[0]?.user_id ?? null;
   },
 
-  // Ingredients
+  // ── Ingredients ──────────────────────────────────────────────
   getIngredients: async (postId) => {
     const [rows] = await db.execute(
       "SELECT ingredient_id, ingredient_text FROM ingredients WHERE post_id = ? ORDER BY ingredient_id",
@@ -100,14 +106,15 @@ const Post = {
   setIngredients: async (conn, postId, items) => {
     await conn.execute("DELETE FROM ingredients WHERE post_id = ?", [postId]);
     if (!items?.length) return;
-    const values = items.map((t) => [postId, t]);
+    const values = items.filter(t => t?.trim()).map(t => [postId, t.trim()]);
+    if (!values.length) return;
     await conn.query(
       "INSERT INTO ingredients (post_id, ingredient_text) VALUES ?",
       [values]
     );
   },
 
-  // Steps
+  // ── Steps ────────────────────────────────────────────────────
   getSteps: async (postId) => {
     const [rows] = await db.execute(
       "SELECT step_id, step_number, step_description FROM steps WHERE post_id = ? ORDER BY step_number",
@@ -119,14 +126,17 @@ const Post = {
   setSteps: async (conn, postId, items) => {
     await conn.execute("DELETE FROM steps WHERE post_id = ?", [postId]);
     if (!items?.length) return;
-    const values = items.map((desc, idx) => [postId, idx + 1, desc]);
+    const values = items
+      .filter(d => d?.trim())
+      .map((desc, idx) => [postId, idx + 1, desc.trim()]);
+    if (!values.length) return;
     await conn.query(
       "INSERT INTO steps (post_id, step_number, step_description) VALUES ?",
       [values]
     );
   },
 
-  // Likes
+  // ── Likes ────────────────────────────────────────────────────
   isLikedBy: async (postId, userId) => {
     const [rows] = await db.execute(
       "SELECT like_id FROM post_likes WHERE post_id = ? AND user_id = ? LIMIT 1",

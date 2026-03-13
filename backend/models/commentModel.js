@@ -3,7 +3,7 @@ import db from "../config/db.js";
 const Comment = {
   getByPost: async (postId) => {
     const [rows] = await db.execute(
-      `SELECT c.comment_id, c.comment_text, c.parent_comment_id, c.created_at,
+      `SELECT c.comment_id, c.comment_text, c.created_at,
               u.user_id, u.name AS author_name, u.profile_picture
        FROM   comments c
        JOIN   users u ON c.user_id = u.user_id
@@ -14,11 +14,10 @@ const Comment = {
     return rows;
   },
 
-  create: async ({ userId, postId, commentText, parentCommentId = null }) => {
+  create: async ({ userId, postId, commentText }) => {
     const [result] = await db.execute(
-      `INSERT INTO comments (user_id, post_id, parent_comment_id, comment_text)
-       VALUES (?, ?, ?, ?)`,
-      [userId, postId, parentCommentId, commentText]
+      `INSERT INTO comments (user_id, post_id, comment_text) VALUES (?, ?, ?)`,
+      [userId, postId, commentText]
     );
     return result.insertId;
   },

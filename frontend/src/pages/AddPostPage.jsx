@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPost } from "../api/postService";
+import { createQuestion } from "../api/questionService";
 import useCultures from "../hooks/useCultures";
 import "./AddPostPage.css";
 
@@ -24,19 +25,15 @@ export default function AddPostPage() {
   const [preview,    setPreview]    = useState(null);
   const [serverErr,  setServerErr]  = useState("");
 
-  const set = (key, val) => {
-    setForm((f) => ({ ...f, [key]: val }));
-    if (errors[key]) setErrors((e) => ({ ...e, [key]: "" }));
-  };
+  const isQuestion = type === "question";
 
-  const setListItem = (k, i, v) => {
-    const arr = [...form[k]]; arr[i] = v; set(k, arr);
+  const set = (key, val) => {
+    setForm(f => ({ ...f, [key]: val }));
+    if (errors[key]) setErrors(e => ({ ...e, [key]: "" }));
   };
-  const addListItem    = (k) => set(k, [...form[k], ""]);
-  const removeListItem = (k, i) => {
-    const arr = form[k].filter((_, j) => j !== i);
-    set(k, arr.length ? arr : [""]);
-  };
+  const setListItem    = (k, i, v) => { const a = [...form[k]]; a[i] = v; set(k, a); };
+  const addListItem    = (k)       => set(k, [...form[k], ""]);
+  const removeListItem = (k, i)    => { const a = form[k].filter((_, j) => j !== i); set(k, a.length ? a : [""]); };
 
   const handleMedia = (e) => {
     const file = e.target.files[0];
@@ -44,19 +41,18 @@ export default function AddPostPage() {
     set("media", file);
     if (file.type.startsWith("image/")) {
       const reader = new FileReader();
-      reader.onload = (ev) => setPreview(ev.target.result);
+      reader.onload = ev => setPreview(ev.target.result);
       reader.readAsDataURL(file);
     } else {
-      setPreview(null); // video — no inline preview
+      setPreview(null);
     }
   };
 
   const validate = () => {
     const e = {};
-    if (!form.title.trim())         e.title       = "Title is required";
-    if (!form.description.trim())   e.description = "Description is required";
-    if (!form.culture_id)           e.culture_id  = "Please select a culture";
-    if (type !== "question" && !form.media) e.media = "Please upload media";
+    if (!form.title.trim())       e.title       = "Title is required";
+    if (!form.culture_id)         e.culture_id  = "Please select a culture";
+    if (!isQuestion && !form.media) e.media     = "Please upload media";
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -64,30 +60,30 @@ export default function AddPostPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
-
     setSubmitting(true);
     setServerErr("");
-
     try {
-      const fd = new FormData();
-      fd.append("title",       form.title.trim());
-      fd.append("description", form.description.trim());
-      fd.append("culture_id",  form.culture_id);
-      fd.append("post_type",   type === "question" ? "recipe" : type); // map Q to recipe for now
-
-      const ingredients = form.ingredients.filter((s) => s.trim());
-      const steps       = form.steps.filter((s) => s.trim());
-      fd.append("ingredients", JSON.stringify(ingredients));
-      fd.append("steps",       JSON.stringify(steps));
-
-      if (form.media) fd.append("media", form.media);
-
-      await createPost(fd);
+      if (isQuestion) {
+        // Questions go to the questions table via questionService
+        await createQuestion({
+          title:       form.title.trim(),
+          description: form.description.trim() || undefined,
+          culture_id:  form.culture_id || undefined,
+        });
+      } else {
+        const fd = new FormData();
+        fd.append("title",       form.title.trim());
+        fd.append("description", form.description.trim());
+        fd.append("culture_id",  form.culture_id);
+        fd.append("post_type",   type);
+        fd.append("ingredients", JSON.stringify(form.ingredients.filter(s => s.trim())));
+        fd.append("steps",       JSON.stringify(form.steps.filter(s => s.trim())));
+        if (form.media) fd.append("media", form.media);
+        await createPost(fd);
+      }
       navigate("/homeUser");
     } catch (err) {
-      setServerErr(
-        err.response?.data?.message || "Failed to create post. Please try again."
-      );
+      setServerErr(err.response?.data?.message || "Failed to publish. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -103,11 +99,11 @@ export default function AddPostPage() {
 
         {/* Type selector */}
         <div className="addpage-types">
-          {POST_TYPES.map((t) => (
+          {POST_TYPES.map(t => (
             <button
               key={t.id}
               className={`addpage-type-btn ${type === t.id ? "active" : ""}`}
-              onClick={() => setType(t.id)}
+              onClick={() => { setType(t.id); setErrors({}); setServerErr(""); }}
               type="button"
             >
               <span className="addpage-type-emoji">{t.emoji}</span>
@@ -120,50 +116,59 @@ export default function AddPostPage() {
         {serverErr && <p className="addpage-server-err">{serverErr}</p>}
 
         <form onSubmit={handleSubmit} className="addpage-form">
+
           {/* Title */}
           <div className="addpage-field">
-            <label className="addpage-label">Title <span className="req">*</span></label>
+            <label className="addpage-label">
+              {isQuestion ? "Question Title" : "Title"} <span className="req">*</span>
+            </label>
             <input
               type="text"
               className={`addpage-input ${errors.title ? "err" : ""}`}
               value={form.title}
-              onChange={(e) => set("title", e.target.value)}
-              placeholder={type === "question" ? "What do you want to ask?" : "Name of your dish…"}
+              onChange={e => set("title", e.target.value)}
+              placeholder={isQuestion ? "What do you want to ask?" : "Name of your dish…"}
             />
             {errors.title && <span className="addpage-err">{errors.title}</span>}
           </div>
 
           {/* Description */}
           <div className="addpage-field">
-            <label className="addpage-label">Description <span className="req">*</span></label>
+            <label className="addpage-label">
+              {isQuestion ? "Details" : "Description"}
+              {!isQuestion && <span className="req"> *</span>}
+              {isQuestion && <span className="addpage-optional"> (optional)</span>}
+            </label>
             <textarea
               className={`addpage-input addpage-textarea ${errors.description ? "err" : ""}`}
               value={form.description}
-              onChange={(e) => set("description", e.target.value)}
-              placeholder="Tell the story behind this…"
-              rows={4}
+              onChange={e => set("description", e.target.value)}
+              placeholder={isQuestion ? "Add more context to your question…" : "Tell the story behind this…"}
+              rows={isQuestion ? 4 : 3}
             />
             {errors.description && <span className="addpage-err">{errors.description}</span>}
           </div>
 
           {/* Culture */}
           <div className="addpage-field">
-            <label className="addpage-label">Culture Tag <span className="req">*</span></label>
+            <label className="addpage-label">
+              Culture Tag <span className="req">*</span>
+            </label>
             <select
               className={`addpage-input addpage-select ${errors.culture_id ? "err" : ""}`}
               value={form.culture_id}
-              onChange={(e) => set("culture_id", e.target.value)}
+              onChange={e => set("culture_id", e.target.value)}
             >
               <option value="">Select a culture…</option>
-              {cultures.map((c) => (
+              {cultures.map(c => (
                 <option key={c.culture_id} value={c.culture_id}>{c.culture_name}</option>
               ))}
             </select>
             {errors.culture_id && <span className="addpage-err">{errors.culture_id}</span>}
           </div>
 
-          {/* Ingredients */}
-          {type !== "question" && (
+          {/* Ingredients — recipe/reel only */}
+          {!isQuestion && (
             <div className="addpage-field">
               <label className="addpage-label">Ingredients</label>
               {form.ingredients.map((ing, i) => (
@@ -171,7 +176,7 @@ export default function AddPostPage() {
                   <span className="addpage-bullet">•</span>
                   <input type="text" className="addpage-input addpage-list-input"
                     value={ing}
-                    onChange={(e) => setListItem("ingredients", i, e.target.value)}
+                    onChange={e => setListItem("ingredients", i, e.target.value)}
                     placeholder={`Ingredient ${i + 1}`}
                   />
                   {form.ingredients.length > 1 && (
@@ -179,14 +184,12 @@ export default function AddPostPage() {
                   )}
                 </div>
               ))}
-              <button type="button" className="addpage-add-item" onClick={() => addListItem("ingredients")}>
-                + Add Ingredient
-              </button>
+              <button type="button" className="addpage-add-item" onClick={() => addListItem("ingredients")}>+ Add Ingredient</button>
             </div>
           )}
 
-          {/* Steps */}
-          {type !== "question" && (
+          {/* Steps — recipe/reel only */}
+          {!isQuestion && (
             <div className="addpage-field">
               <label className="addpage-label">Steps</label>
               {form.steps.map((step, i) => (
@@ -194,7 +197,7 @@ export default function AddPostPage() {
                   <span className="addpage-step-num">{i + 1}</span>
                   <input type="text" className="addpage-input addpage-list-input"
                     value={step}
-                    onChange={(e) => setListItem("steps", i, e.target.value)}
+                    onChange={e => setListItem("steps", i, e.target.value)}
                     placeholder={`Step ${i + 1}`}
                   />
                   {form.steps.length > 1 && (
@@ -202,14 +205,12 @@ export default function AddPostPage() {
                   )}
                 </div>
               ))}
-              <button type="button" className="addpage-add-item" onClick={() => addListItem("steps")}>
-                + Add Step
-              </button>
+              <button type="button" className="addpage-add-item" onClick={() => addListItem("steps")}>+ Add Step</button>
             </div>
           )}
 
-          {/* Media upload */}
-          {type !== "question" && (
+          {/* Media — recipe/reel only */}
+          {!isQuestion && (
             <div className="addpage-field">
               <label className="addpage-label">
                 {type === "reel" ? "Upload Video" : "Upload Image"} <span className="req">*</span>
@@ -218,21 +219,12 @@ export default function AddPostPage() {
                 {preview
                   ? <img src={preview} alt="preview" className="addpage-preview" />
                   : form.media
-                    ? (
-                      <div className="addpage-media-placeholder">
-                        <span className="addpage-media-icon">🎬</span>
-                        <span className="addpage-media-label">{form.media.name}</span>
-                      </div>
-                    )
-                    : (
-                      <div className="addpage-media-placeholder">
+                    ? <div className="addpage-media-placeholder"><span className="addpage-media-icon">🎬</span><span className="addpage-media-label">{form.media.name}</span></div>
+                    : <div className="addpage-media-placeholder">
                         <span className="addpage-media-icon">{type === "reel" ? "🎬" : "🖼️"}</span>
                         <span className="addpage-media-label">Click to upload</span>
-                        <span className="addpage-media-hint">
-                          {type === "reel" ? "MP4, MOV or WEBM (max 60s)" : "PNG, JPG or WEBP"}
-                        </span>
+                        <span className="addpage-media-hint">{type === "reel" ? "MP4, MOV or WEBM (max 60s)" : "PNG, JPG or WEBP"}</span>
                       </div>
-                    )
                 }
                 <input
                   type="file"
@@ -247,11 +239,8 @@ export default function AddPostPage() {
 
           <button type="submit" className="addpage-submit" disabled={submitting}>
             {submitting
-              ? "Uploading…"
-              : <>
-                  <img src="https://api.iconify.design/material-symbols/send.svg?color=%23fff" alt="" width="16" height="16" />
-                  Publish Post
-                </>
+              ? "Publishing…"
+              : <><img src="https://api.iconify.design/material-symbols/send.svg?color=%23fff" alt="" width="16" height="16" /> Publish</>
             }
           </button>
         </form>

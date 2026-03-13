@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import NavBar from '../components/NavBar';
 import { getFoodById } from '../data/dummyData';
@@ -7,17 +7,10 @@ import './FoodDetailPage.css';
 
 const FoodDetailPage = () => {
   const { foodId } = useParams();
-  const navigate = useNavigate();
-  const [food, setFood] = useState(null);
+  const navigate   = useNavigate();
 
-  useEffect(() => {
-    const foodData = getFoodById(foodId);
-    setFood(foodData);
-  }, [foodId]);
-
-  const handleBack = () => {
-    navigate(-1);
-  };
+  // No useEffect needed — getFoodById is synchronous local data
+  const food = getFoodById(foodId);
 
   if (!food) {
     return (
@@ -25,7 +18,7 @@ const FoodDetailPage = () => {
         <NavBar />
         <div className="not-found">
           <h2 className="not-found-title">Food not found</h2>
-          <button onClick={handleBack} className="not-found-button">
+          <button onClick={() => navigate(-1)} className="not-found-button">
             Go back
           </button>
         </div>
@@ -38,8 +31,7 @@ const FoodDetailPage = () => {
       <NavBar />
 
       <div className="detail-container">
-        {/* Back Button */}
-        <button onClick={handleBack} className="back-button">
+        <button onClick={() => navigate(-1)} className="back-button">
           <ArrowLeft className="back-icon" />
           Back
         </button>
@@ -65,15 +57,12 @@ const FoodDetailPage = () => {
 
         {/* Content Grid */}
         <div className="content-grid">
-          {/* Main Content */}
           <div className="main-column">
-            {/* Description */}
             <div className="content-card">
               <h2 className="card-title">About</h2>
               <p className="card-text">{food.description}</p>
             </div>
 
-            {/* Ingredients */}
             {food.ingredients && (
               <div className="content-card">
                 <h2 className="card-title">Ingredients</h2>
@@ -88,7 +77,6 @@ const FoodDetailPage = () => {
               </div>
             )}
 
-            {/* Preparation */}
             {food.preparation && (
               <div className="content-card">
                 <h2 className="card-title">Preparation</h2>
@@ -97,9 +85,7 @@ const FoodDetailPage = () => {
             )}
           </div>
 
-          {/* Sidebar */}
           <div className="sidebar-column">
-            {/* Quick Info */}
             <div className="info-card">
               <h3 className="info-title">Quick Info</h3>
               <div className="info-items">
@@ -133,7 +119,6 @@ const FoodDetailPage = () => {
               </div>
             </div>
 
-            {/* Cultural Significance */}
             <div className="significance-card">
               <h3 className="significance-title">Cultural Significance</h3>
               <p className="significance-text">

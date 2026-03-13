@@ -1,3 +1,4 @@
+import Notification from "../models/notificationModel.js";
 import db from "../config/db.js";
 import Post from "../models/postModel.js";
 import { deleteCloudinaryAsset } from "../config/cloudinary.js";
@@ -9,16 +10,17 @@ export const getFeed = async (req, res) => {
     const offset    = Number(req.query.offset)   || 0;
     const cultureId = req.query.culture_id || null;
     const type      = req.query.type       || null;
+    const userId    = req.query.user_id     || null;
 
-    const posts = await Post.getFeed({ limit, offset, cultureId, type });
+    const posts = await Post.getFeed({ limit, offset, cultureId, type, userId });
 
     // If user is authenticated, flag which posts they have liked
-    const userId = req.user?.userId;
+    const authUserId = req.user?.userId;
     let likedSet = new Set();
-    if (userId) {
+    if (authUserId) {
       const [liked] = await db.execute(
         "SELECT post_id FROM post_likes WHERE user_id = ?",
-        [userId]
+        [authUserId]
       );
       likedSet = new Set(liked.map((r) => r.post_id));
     }

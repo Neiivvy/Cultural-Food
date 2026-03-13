@@ -16,10 +16,18 @@ export default function RecipesPage() {
     setLoading(true); setError("");
     try {
       const params = {};
-      if (typeFilter !== "all") params.type       = typeFilter;
-      if (cultureFilter)        params.culture_id = cultureFilter;
+      // "all" on Recipes page means recipe+reel — never questions (those have their own page)
+      if (typeFilter === "all") {
+        // fetch recipe and reel separately then merge — or use type filter
+        // Backend posts table only has recipe/reel so no type param = all posts (recipe+reel)
+        // But guard against any stale question-type rows by filtering client-side too
+      } else {
+        params.type = typeFilter;
+      }
+      if (cultureFilter) params.culture_id = cultureFilter;
       const res = await getFeed(params);
-      setPosts(res.data.data.posts || []);
+      const all = res.data.data.posts || [];
+      setPosts(all.filter(p => p.post_type === 'recipe' || p.post_type === 'reel'));
     } catch {
       setError("Could not load posts.");
     } finally {

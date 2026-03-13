@@ -1,3 +1,5 @@
+import db from "../config/db.js";
+import Notification from "../models/notificationModel.js";
 import Comment from "../models/commentModel.js";
 
 // GET /api/posts/:postId/comments
@@ -14,7 +16,7 @@ export const getComments = async (req, res) => {
 // POST /api/posts/:postId/comments
 export const addComment = async (req, res) => {
   try {
-    const { comment_text, parent_comment_id } = req.body;
+    const { comment_text } = req.body;
 
     if (!comment_text?.trim()) {
       return res.status(400).json({ success: false, message: "Comment text is required." });
@@ -24,10 +26,19 @@ export const addComment = async (req, res) => {
       userId:          req.user.userId,
       postId:          Number(req.params.postId),
       commentText:     comment_text.trim(),
-      parentCommentId: parent_comment_id || null,
+      
     });
 
     const comment = await Comment.findById(commentId);
+
+    // Notify post owner
+    const [postRow] = await db.execute("SELECT user_id, title FROM posts WHERE post_id = ? LIMIT 1", [Number(req.params.postId)]);
+    if (postRow[0]) {
+      const [actor] = await db.execute("SELECT name FROM users WHERE user_id = ? LIMIT 1", [req.user.userId]);
+      const name = actor[0]?.name || "Someone";
+      await Notification.create({ recipientId: postRow[0].user_id, actorId: req.user.userId, type: "comment", postId: Number(req.params.postId), message: `${name} commented on your post` });
+    }
+
     return res.status(201).json({ success: true, message: "Comment added.", data: { comment } });
   } catch (err) {
     console.error("addComment error:", err);

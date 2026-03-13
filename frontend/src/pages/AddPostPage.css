@@ -191,3 +191,13 @@
   box-shadow: 0 6px 20px rgba(236,72,153,0.42);
 }
 .addpage-submit:disabled { background: #f9a8d4; cursor: not-allowed; box-shadow: none; }
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .addpage-container { padding: 1rem 0.875rem 5rem; }
+  .addpage-types { grid-template-columns: repeat(3,1fr); gap: 0.4rem; }
+  .addpage-type-btn { padding: 0.6rem 0.3rem; }
+  .addpage-type-desc { display: none; }
+  .addpage-type-emoji { font-size: 1.2rem; }
+  .addpage-type-label { font-size: 0.78rem; }
+}

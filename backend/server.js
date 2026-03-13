@@ -8,7 +8,8 @@ import postRoutes     from "./routes/postRoutes.js";
 import commentRoutes  from "./routes/commentRoutes.js";
 import questionRoutes from "./routes/questionRoutes.js";
 import answerRoutes   from "./routes/answerRoutes.js";
-import cultureRoutes  from "./routes/cultureRoutes.js";
+import cultureRoutes       from "./routes/cultureRoutes.js";
+import notificationRoutes  from "./routes/notificationRoutes.js";
 
 dotenv.config();
 
@@ -32,6 +33,7 @@ app.use("/api/posts",     postRoutes);
 app.use("/api/comments",  commentRoutes);
 app.use("/api/questions", questionRoutes);
 app.use("/api/answers",   answerRoutes);
+app.use("/api/notifications", notificationRoutes);
 app.use("/api/cultures",  cultureRoutes);
 
 // Health check
