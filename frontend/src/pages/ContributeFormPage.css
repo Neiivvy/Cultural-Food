@@ -1,0 +1,168 @@
+.cform-page {
+  padding-top: 80px;
+  min-height: 100vh;
+  background: #f5ede6;
+  font-family: 'DM Sans', sans-serif;
+}
+.cform-container {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 4rem;
+}
+
+/* Header */
+.cform-back {
+  background: none; border: none; cursor: pointer;
+  color: #7c2d2d; font-size: 0.875rem; font-weight: 700;
+  padding: 0; margin-bottom: 1.25rem; display: inline-flex; align-items: center; gap: 0.3rem;
+}
+.cform-back:hover { text-decoration: underline; }
+.cform-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1.9rem; font-weight: 800;
+  color: #1f1010; margin: 0 0 0.5rem;
+}
+.cform-subtitle { font-size: 0.95rem; color: #5a3e3e; margin: 0 0 2rem; line-height: 1.6; }
+
+/* Form */
+.cform-form {
+  background: #fff;
+  border: 1.5px solid #e8ddd5;
+  border-radius: 1.25rem;
+  padding: 2rem 1.75rem;
+  display: flex; flex-direction: column; gap: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+}
+.cform-server-error {
+  background: #fef2f2; border: 1px solid #fca5a5;
+  color: #c0392b; border-radius: 0.6rem;
+  padding: 0.75rem 1rem; font-size: 0.875rem; font-weight: 500;
+}
+
+/* Field */
+.cform-field { display: flex; flex-direction: column; gap: 0.4rem; }
+.cform-label { font-size: 0.85rem; font-weight: 700; color: #2c1a1a; }
+.cform-req   { color: #7c2d2d; }
+
+.cform-input, .cform-select, .cform-textarea {
+  padding: 0.7rem 0.9rem;
+  border: 1.5px solid #e0d4cc;
+  border-radius: 0.65rem;
+  font-size: 0.9rem; color: #1f1010;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s;
+  background: #fff;
+}
+.cform-input:focus, .cform-select:focus, .cform-textarea:focus {
+  border-color: #7c2d2d;
+  box-shadow: 0 0 0 3px rgba(124,45,45,0.1);
+}
+.cform-input.error, .cform-textarea.error {
+  border-color: #c0392b;
+}
+.cform-textarea { resize: vertical; }
+.cform-error { font-size: 0.8rem; color: #c0392b; font-weight: 500; margin: 0; }
+.cform-char-count { font-size: 0.75rem; color: #9c7c6a; text-align: right; }
+
+/* Row */
+.cform-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+/* Chip group */
+.cform-chip-group { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+.cform-chip {
+  padding: 0.35rem 0.85rem;
+  border: 1.5px solid #e0d4cc;
+  border-radius: 50px;
+  font-size: 0.82rem; font-weight: 600;
+  color: #4a3030; background: #fff; cursor: pointer;
+  transition: all 0.15s;
+}
+.cform-chip:hover  { border-color: #7c2d2d; color: #7c2d2d; background: #fdf5f0; }
+.cform-chip.active { border-color: #7c2d2d; background: #7c2d2d; color: #fff; }
+
+/* Image upload */
+.cform-img-drop {
+  border: 2px dashed #d4c4bc;
+  border-radius: 0.85rem;
+  padding: 2rem;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: border-color 0.18s, background 0.18s;
+  min-height: 140px;
+}
+.cform-img-drop:hover { border-color: #7c2d2d; background: #fdf5f0; }
+.cform-img-drop.has-img { padding: 0; overflow: hidden; }
+.cform-img-placeholder { text-align: center; }
+.cform-img-icon   { font-size: 2rem; display: block; margin-bottom: 0.5rem; }
+.cform-img-text   { font-size: 0.9rem; font-weight: 700; color: #2c1a1a; margin: 0 0 0.25rem; }
+.cform-img-hint   { font-size: 0.78rem; color: #9c7c6a; margin: 0; }
+.cform-img-preview { width: 100%; max-height: 280px; object-fit: cover; display: block; border-radius: 0.85rem; }
+.cform-img-remove {
+  margin-top: 0.4rem; background: none; border: none;
+  color: #c0392b; font-size: 0.8rem; font-weight: 600;
+  cursor: pointer; padding: 0;
+}
+.cform-img-remove:hover { text-decoration: underline; }
+
+/* Footer */
+.cform-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem; flex-wrap: wrap;
+  padding-top: 0.5rem; border-top: 1px solid #f0e8e0;
+}
+.cform-footer-note { font-size: 0.8rem; color: #9c7c6a; margin: 0; }
+.cform-submit {
+  display: inline-flex; align-items: center; gap: 0.45rem;
+  padding: 0.75rem 2rem;
+  background: #7c2d2d; color: #fff;
+  border: none; border-radius: 50px;
+  font-size: 0.95rem; font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 3px 14px rgba(124,45,45,0.3);
+  transition: background 0.18s, transform 0.15s;
+}
+.cform-submit:hover:not(:disabled) { background: #5c1f1f; transform: translateY(-1px); }
+.cform-submit:disabled { opacity: 0.65; cursor: not-allowed; }
+.cform-spinner {
+  width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: #fff; border-radius: 50%;
+  animation: spin 0.7s linear infinite; display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Success */
+.cform-success {
+  max-width: 480px; margin: 4rem auto;
+  background: #fff; border: 1.5px solid #e8ddd5;
+  border-radius: 1.25rem; padding: 3rem 2rem;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+}
+.cform-success-icon  { font-size: 3.5rem; margin-bottom: 1rem; display: block; }
+.cform-success-title { font-family: 'Fraunces', serif; font-size: 1.6rem; font-weight: 800; color: #1f1010; margin: 0 0 0.75rem; }
+.cform-success-msg   { font-size: 0.95rem; color: #5a3e3e; line-height: 1.65; margin: 0 0 1.75rem; }
+.cform-success-actions { display: flex; gap: 0.85rem; justify-content: center; flex-wrap: wrap; }
+.cform-btn-primary {
+  padding: 0.7rem 1.75rem; background: #7c2d2d; color: #fff;
+  border: none; border-radius: 50px; font-size: 0.9rem; font-weight: 700;
+  cursor: pointer; transition: background 0.18s;
+}
+.cform-btn-primary:hover { background: #5c1f1f; }
+.cform-btn-secondary {
+  padding: 0.7rem 1.75rem; background: #fff; color: #7c2d2d;
+  border: 1.5px solid #7c2d2d; border-radius: 50px;
+  font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: background 0.18s;
+}
+.cform-btn-secondary:hover { background: #fdf5f0; }
+
+/* Responsive */
+@media (max-width: 600px) {
+  .cform-form    { padding: 1.5rem 1.1rem; }
+  .cform-row     { grid-template-columns: 1fr; }
+  .cform-footer  { flex-direction: column; align-items: stretch; }
+  .cform-submit  { width: 100%; justify-content: center; }
+}

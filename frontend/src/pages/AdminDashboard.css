@@ -1,0 +1,225 @@
+/* ── Layout ── */
+.adash-page {
+  display: flex; min-height: 100vh;
+  font-family: 'DM Sans', sans-serif;
+  background: #f5ede6;
+}
+
+/* ── Toast ── */
+.adash-toast {
+  position: fixed; top: 1rem; right: 1rem; z-index: 999;
+  background: #1f1010; color: #fff;
+  padding: 0.75rem 1.25rem; border-radius: 0.6rem;
+  font-size: 0.875rem; font-weight: 600;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  animation: slideIn 0.2s ease;
+}
+@keyframes slideIn { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+
+/* ── Sidebar ── */
+.adash-sidebar {
+  width: 220px; flex-shrink: 0;
+  background: #1f1010; color: #fff;
+  display: flex; flex-direction: column;
+  position: sticky; top: 0; height: 100vh;
+}
+.adash-sidebar-brand {
+  padding: 1.5rem 1.25rem 1rem;
+  font-family: 'Fraunces', serif; font-size: 1.05rem;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.adash-brand-k    { color: #e8a0a0; font-weight: 800; }
+.adash-brand-s    { color: #7dd6cc; font-weight: 700; }
+.adash-admin-badge{
+  display: inline-block; margin-left: 0.4rem;
+  background: #7c2d2d; color: #fff;
+  font-size: 0.6rem; font-weight: 800;
+  padding: 0.1rem 0.5rem; border-radius: 50px;
+  vertical-align: middle; letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.adash-nav        { flex: 1; padding: 1rem 0.75rem; display: flex; flex-direction: column; gap: 0.25rem; }
+.adash-nav-item   {
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%; padding: 0.65rem 0.85rem;
+  background: none; border: none; color: rgba(255,255,255,0.65);
+  border-radius: 0.6rem; font-size: 0.875rem; font-weight: 600;
+  cursor: pointer; text-align: left;
+  transition: background 0.15s, color 0.15s;
+}
+.adash-nav-item:hover  { background: rgba(255,255,255,0.08); color: #fff; }
+.adash-nav-item.active { background: #7c2d2d; color: #fff; }
+.adash-nav-badge  {
+  background: #e8a0a0; color: #1f1010;
+  font-size: 0.65rem; font-weight: 800;
+  padding: 0.1rem 0.45rem; border-radius: 50px; min-width: 18px; text-align: center;
+}
+.adash-sidebar-footer  { padding: 1rem 1.25rem; border-top: 1px solid rgba(255,255,255,0.1); }
+.adash-sidebar-user    { font-size: 0.8rem; color: rgba(255,255,255,0.5); margin: 0 0 0.5rem; }
+.adash-logout          {
+  width: 100%; padding: 0.5rem; background: none;
+  border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.7);
+  border-radius: 0.5rem; font-size: 0.8rem; font-weight: 600; cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.adash-logout:hover { background: rgba(255,255,255,0.08); color: #fff; }
+
+/* ── Main ── */
+.adash-main    { flex: 1; padding: 2rem; overflow-y: auto; }
+
+/* Stats */
+.adash-stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px,1fr));
+  gap: 1rem; margin-bottom: 2rem;
+}
+.adash-stat {
+  background: #fff; border: 1.5px solid #e8ddd5;
+  border-radius: 1rem; padding: 1.25rem;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 0.35rem;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+.adash-stat-icon  { font-size: 1.5rem; }
+.adash-stat-val   { font-size: 1.8rem; font-weight: 800; color: var(--stat-color, #1f1010); line-height: 1; }
+.adash-stat-label { font-size: 0.78rem; color: #9c7c6a; font-weight: 600; }
+
+/* Section header */
+.adash-section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+.adash-section-title { font-family: 'Fraunces', serif; font-size: 1.35rem; font-weight: 800; color: #1f1010; margin: 0; }
+.adash-refresh {
+  background: none; border: 1.5px solid #e0d4cc; color: #4a3030;
+  padding: 0.4rem 0.85rem; border-radius: 0.5rem;
+  font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: background 0.15s;
+}
+.adash-refresh:hover { background: #fdf5f0; }
+
+.adash-loading { text-align: center; padding: 3rem; color: #9c7c6a; }
+.adash-empty   { text-align: center; padding: 3rem; color: #9c7c6a; font-size: 1rem; }
+
+/* Foods grid */
+.adash-foods-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px,1fr));
+  gap: 1.1rem;
+}
+.adash-food-card {
+  background: #fff; border: 1.5px solid #e8ddd5;
+  border-radius: 1rem; overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  display: flex; flex-direction: column;
+}
+.adash-food-img-wrap { position: relative; cursor: pointer; }
+.adash-food-img      { width: 100%; height: 160px; object-fit: cover; display: block; }
+.adash-food-img-placeholder {
+  height: 160px; background: #f0e8e0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 3rem;
+}
+.adash-status-badge {
+  position: absolute; top: 0.6rem; left: 0.6rem;
+  font-size: 0.68rem; font-weight: 800;
+  padding: 0.2rem 0.6rem; border-radius: 50px;
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+.adash-status-badge.pending  { background: #fef3c7; color: #92400e; }
+.adash-status-badge.approved { background: #d1fae5; color: #065f46; }
+.adash-status-badge.rejected { background: #fee2e2; color: #991b1b; }
+
+.adash-food-body    { padding: 0.9rem 1rem 0; flex: 1; }
+.adash-food-name    { font-size: 1rem; font-weight: 800; color: #1f1010; margin: 0 0 0.5rem; cursor: pointer; }
+.adash-food-name:hover { color: #7c2d2d; }
+.adash-food-tags    { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.55rem; }
+.adash-tag          { font-size: 0.72rem; font-weight: 700; padding: 0.2rem 0.55rem; border-radius: 50px; background: #f0e8e0; color: #4a3030; }
+.adash-tag.teal     { background: #edf7f5; color: #1f6058; }
+.adash-food-desc    { font-size: 0.82rem; color: #5a3e3e; line-height: 1.5; margin: 0 0 0.5rem; }
+.adash-food-meta    { font-size: 0.75rem; color: #9c7c6a; margin: 0 0 0.4rem; }
+.adash-food-rejection { font-size: 0.75rem; color: #c0392b; background: #fef2f2; padding: 0.35rem 0.6rem; border-radius: 0.4rem; margin: 0; }
+
+.adash-food-actions {
+  display: flex; gap: 0.5rem; padding: 0.75rem 1rem;
+  border-top: 1px solid #f0e8e0;
+}
+.adash-btn-sm {
+  padding: 0.38rem 0.75rem; border-radius: 0.5rem;
+  font-size: 0.78rem; font-weight: 700; cursor: pointer;
+  border: none; transition: background 0.15s;
+}
+.adash-btn-approve { background: #d1fae5; color: #065f46; }
+.adash-btn-approve:hover { background: #a7f3d0; }
+.adash-btn-reject  { background: #fee2e2; color: #991b1b; }
+.adash-btn-reject:hover  { background: #fecaca; }
+.adash-btn-delete  { background: #fee2e2; color: #991b1b; }
+.adash-btn-delete:hover  { background: #fecaca; }
+.adash-btn-ghost   { background: #f0e8e0; color: #4a3030; }
+.adash-btn-ghost:hover   { background: #e8ddd5; }
+
+/* Table (reports) */
+.adash-table-wrap { overflow-x: auto; }
+.adash-table {
+  width: 100%; border-collapse: collapse;
+  background: #fff; border-radius: 1rem; overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+.adash-table th {
+  background: #f0e8e0; padding: 0.75rem 1rem;
+  font-size: 0.78rem; font-weight: 800; color: #4a3030;
+  text-align: left; white-space: nowrap;
+}
+.adash-table td {
+  padding: 0.75rem 1rem; font-size: 0.85rem;
+  border-top: 1px solid #f0e8e0; vertical-align: top;
+}
+.adash-td-bold   { font-weight: 700; color: #1f1010; }
+.adash-td-reason { max-width: 280px; color: #5a3e3e; }
+.adash-td-date   { white-space: nowrap; color: #9c7c6a; }
+.adash-row-actions { display: flex; gap: 0.4rem; }
+
+/* Overlay / Modal */
+.adash-overlay {
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center;
+  padding: 1rem;
+}
+.adash-modal {
+  background: #fff; border-radius: 1.1rem;
+  padding: 1.75rem; width: 100%; max-width: 420px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  animation: slideUp 0.2s ease;
+  position: relative;
+}
+.adash-modal-lg   { max-width: 600px; max-height: 90vh; overflow-y: auto; }
+@keyframes slideUp { from { transform:translateY(16px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+.adash-modal-close {
+  position: absolute; top: 1rem; right: 1rem;
+  background: #f0e8e0; border: none; border-radius: 50%;
+  width: 30px; height: 30px; cursor: pointer; font-size: 0.85rem;
+  display: flex; align-items: center; justify-content: center;
+}
+.adash-modal-title { font-family: 'Fraunces', serif; font-size: 1.2rem; font-weight: 800; color: #1f1010; margin: 0 0 0.35rem; }
+.adash-modal-sub   { font-size: 0.875rem; color: #5a3e3e; margin: 0 0 1rem; }
+.adash-modal-note  {
+  width: 100%; padding: 0.65rem 0.8rem;
+  border: 1.5px solid #e0d4cc; border-radius: 0.6rem;
+  font-size: 0.875rem; font-family: inherit;
+  outline: none; resize: vertical; margin-bottom: 1rem;
+}
+.adash-modal-actions { display: flex; gap: 0.75rem; justify-content: flex-end; }
+
+/* Detail modal */
+.adash-detail-img   { width: 100%; max-height: 260px; object-fit: cover; border-radius: 0.75rem; margin-bottom: 1rem; }
+.adash-detail-name  { font-family: 'Fraunces', serif; font-size: 1.4rem; font-weight: 800; color: #1f1010; margin: 0 0 0.6rem; }
+.adash-detail-meta  { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.85rem; }
+.adash-detail-desc  { font-size: 0.9rem; color: #3d2020; line-height: 1.65; margin: 0 0 0.85rem; }
+.adash-detail-sig   { background: #f9f0f0; border-radius: 0.65rem; padding: 0.85rem 1rem; margin-bottom: 0.85rem; }
+.adash-detail-sig p { font-size: 0.875rem; color: #3d2020; margin: 0.35rem 0 0; line-height: 1.6; }
+.adash-detail-by    { font-size: 0.78rem; color: #9c7c6a; margin: 0 0 1rem; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .adash-sidebar { display: none; }
+  .adash-main    { padding: 1.25rem; }
+}

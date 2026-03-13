@@ -5,10 +5,10 @@ import './Login.css';
 
 export default function Login() {
   const navigate = useNavigate();
-  const [formData, setFormData]       = useState({ email: '', password: '' });
-  const [errors,   setErrors]         = useState({});
+  const [formData,    setFormData]    = useState({ email: '', password: '' });
+  const [errors,      setErrors]      = useState({});
   const [serverError, setServerError] = useState('');
-  const [loading,  setLoading]        = useState(false);
+  const [loading,     setLoading]     = useState(false);
 
   const validate = (data) => {
     const e = {};
@@ -16,20 +16,16 @@ export default function Login() {
       e.email = 'Email is required';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email))
       e.email = 'Enter a valid email address';
-
     if (!data.password)
       e.password = 'Password is required';
     else if (data.password.length < 6)
       e.password = 'Password must be at least 6 characters';
-
     return e;
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const next = { ...formData, [name]: value };
-    setFormData(next);
-    // Only clear the field-level error as user types, NOT the server error
+    setFormData(prev => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
   };
 
@@ -46,18 +42,25 @@ export default function Login() {
     if (Object.keys(errs).length) return;
 
     setLoading(true);
-    setServerError(''); // clear only when user actively retries
+    setServerError('');
     try {
-      const result = await loginUser({ email: formData.email, password: formData.password });
+      const result  = await loginUser({ email: formData.email, password: formData.password });
       const payload = result.data?.data;
-      // Guard: if no token in response, treat as failed login
       if (!payload?.token) {
         setServerError('Invalid email or password.');
         return;
       }
       localStorage.setItem('token', payload.token);
-      localStorage.setItem('user', JSON.stringify(payload.user));
-      navigate('/homeUser');
+      localStorage.setItem('user',  JSON.stringify(payload.user));
+
+      // ── Redirect to intended page if user was sent here mid-flow ──
+      const redirect = sessionStorage.getItem('redirectAfterAuth');
+      if (redirect) {
+        sessionStorage.removeItem('redirectAfterAuth');
+        navigate(redirect);
+      } else {
+        navigate('/homeUser');
+      }
     } catch (err) {
       setServerError(
         err.response?.data?.message ||
@@ -75,7 +78,6 @@ export default function Login() {
 
         <div className="auth-brand">
           <Link to="/" className="auth-brand-link">
-            <span>🍜</span>
             <h1 className="auth-brand-title">
               <span className="brand-p">Khana</span>
               <span className="brand-s"> Sanskriti</span>
@@ -138,7 +140,8 @@ export default function Login() {
           <div className="auth-divider"><span>or</span></div>
 
           <p className="auth-switch">
-            Don't have an account? <Link to="/signup" className="auth-link">Sign up</Link>
+            Don't have an account?{' '}
+            <Link to="/signup" className="auth-link">Sign up</Link>
           </p>
         </div>
 

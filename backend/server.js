@@ -10,6 +10,8 @@ import questionRoutes from "./routes/questionRoutes.js";
 import answerRoutes   from "./routes/answerRoutes.js";
 import cultureRoutes       from "./routes/cultureRoutes.js";
 import notificationRoutes  from "./routes/notificationRoutes.js";
+import foodRoutes           from "./routes/foodRoutes.js";
+import adminRoutes          from "./routes/adminRoutes.js";
 
 dotenv.config();
 
@@ -35,6 +37,8 @@ app.use("/api/questions", questionRoutes);
 app.use("/api/answers",   answerRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/cultures",  cultureRoutes);
+app.use("/api/foods",     foodRoutes);
+app.use("/api/admin",     adminRoutes);
 
 // Health check
 app.get("/api/health", (_req, res) =>
