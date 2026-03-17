@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './NavBar.css';
 
-/* ── Avatar: shows profile pic or initials fallback ── */
+/* ── Avatar: profile pic or initials fallback ── */
 function Avatar({ src, name, size = 36, className = '' }) {
   const [err, setErr] = useState(false);
   const initials = (name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
@@ -20,7 +20,7 @@ function Avatar({ src, name, size = 36, className = '' }) {
   }
   return (
     <span
-      className={`pnav-initials ${className}`}
+      className={`nav-initials ${className}`}
       style={{ width: size, height: size, fontSize: size * 0.36, flexShrink: 0 }}
     >
       {initials}
@@ -64,7 +64,7 @@ const LogoutIcon = () => (
   </svg>
 );
 
-export default function NavBar() {
+export default function NavBar({ onAboutClick }) {
   const navigate = useNavigate();
   const [search,     setSearch]     = useState('');
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -75,7 +75,7 @@ export default function NavBar() {
   const token      = localStorage.getItem('token');
   const isLoggedIn = !!token && !!user;
 
-  // Update avatar instantly when profile is saved anywhere in the app
+  // Re-read user when profile is updated anywhere in the app
   useEffect(() => {
     const handler = (e) => {
       const updated = e.detail || JSON.parse(localStorage.getItem('user') || 'null');
@@ -109,82 +109,92 @@ export default function NavBar() {
 
   return (
     <>
-      <nav className="pnav">
-        <div className="pnav-inner">
+      <nav className="nav">
+        <div className="nav-inner">
 
           {/* Brand */}
-          <Link to="/" className="pnav-brand">
-            <span className="pnav-brand-text">
-              <span className="pnav-brand-k">Khana</span>
-              <span className="pnav-brand-s"> Sanskriti</span>
+          <Link to="/" className="nav-brand">
+            <span className="nav-brand-text">
+              <span className="nav-brand-k">Khana</span>
+              <span className="nav-brand-s"> Sanskriti</span>
             </span>
           </Link>
 
-          {/* Search bar (desktop) */}
-          <form className="pnav-search" onSubmit={handleSearch}>
-            <span className="pnav-search-icon"><SearchIcon /></span>
+          {/* Search (desktop) */}
+          <form className="nav-search" onSubmit={handleSearch}>
+            <span className="nav-search-icon"><SearchIcon /></span>
             <input
               type="text"
-              className="pnav-search-input"
+              className="nav-search-input"
               placeholder="Search foods, cultures…"
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
-            <button type="submit" className="pnav-search-btn">Search</button>
+            <button type="submit" className="nav-search-btn">Search</button>
           </form>
 
           {/* Desktop right */}
-          <div className="pnav-right">
-            <Link to="/about"      className="pnav-link">About Us</Link>
-            <Link to="/contribute" className="pnav-contribute">✦ Contribute</Link>
+          <div className="nav-right">
+            <a
+              href="#about"
+              className="nav-link"
+              onClick={onAboutClick || undefined}
+            >
+              About Us
+            </a>
+            <Link to="/contribute" className="nav-contribute">✦ Contribute</Link>
 
             {isLoggedIn ? (
-              <div className="pnav-avatar-wrap" ref={dropRef}>
-                <button className="pnav-avatar-btn" onClick={() => setDropOpen(o => !o)}>
-                  <Avatar src={user.profile_picture} name={user.name} size={34} className="pnav-avatar-img" />
+              <div className="nav-avatar-wrap" ref={dropRef}>
+                <button className="nav-avatar-btn" onClick={() => setDropOpen(o => !o)}>
+                  <Avatar src={user.profile_picture} name={user.name} size={34} className="nav-avatar-img" />
                   <ChevronIcon />
                 </button>
 
                 {dropOpen && (
-                  <div className="pnav-dropdown">
-                    <div className="pnav-drop-header">
-                      <Avatar src={user.profile_picture} name={user.name} size={42} className="pnav-drop-av" />
+                  <div className="nav-dropdown">
+                    <div className="nav-drop-header">
+                      <Avatar src={user.profile_picture} name={user.name} size={42} className="nav-drop-av" />
                       <div>
-                        <p className="pnav-drop-name">{user.name}</p>
-                        <p className="pnav-drop-email">{user.email}</p>
+                        <p className="nav-drop-name">{user.name}</p>
+                        <p className="nav-drop-email">{user.email}</p>
                       </div>
                     </div>
-                    <div className="pnav-drop-divider" />
-                    <Link to="/homeUser" className="pnav-drop-item" onClick={() => setDropOpen(false)}>🍽 Community Feed</Link>
-                    <Link to="/profile"  className="pnav-drop-item" onClick={() => setDropOpen(false)}>👤 My Profile</Link>
-                    <div className="pnav-drop-divider" />
-                    <button className="pnav-drop-item pnav-drop-logout" onClick={handleLogout}>
+                    <div className="nav-drop-divider" />
+                    <Link to="/homeUser" className="nav-drop-item" onClick={() => setDropOpen(false)}>
+                      🍽 Community Feed
+                    </Link>
+                    <Link to="/profile" className="nav-drop-item" onClick={() => setDropOpen(false)}>
+                      👤 My Profile
+                    </Link>
+                    <div className="nav-drop-divider" />
+                    <button className="nav-drop-item nav-drop-logout" onClick={handleLogout}>
                       <LogoutIcon /> Logout
                     </button>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="pnav-auth">
-                <Link to="/login"  className="pnav-login">Login</Link>
-                <Link to="/signup" className="pnav-signup">Sign Up</Link>
+              <div className="nav-auth">
+                <Link to="/login"  className="nav-login">Login</Link>
+                <Link to="/signup" className="nav-signup">Sign Up</Link>
               </div>
             )}
           </div>
 
           {/* Mobile hamburger */}
-          <button className="pnav-hamburger" onClick={() => setMobileOpen(o => !o)}>
+          <button className="nav-hamburger" onClick={() => setMobileOpen(o => !o)}>
             {mobileOpen ? <CloseIcon /> : <MenuIcon />}
           </button>
         </div>
 
         {/* Mobile search strip */}
-        <div className="pnav-mobile-search">
-          <form className="pnav-search pnav-search-mob" onSubmit={handleSearch}>
-            <span className="pnav-search-icon"><SearchIcon /></span>
+        <div className="nav-mobile-search">
+          <form className="nav-search nav-search-mob" onSubmit={handleSearch}>
+            <span className="nav-search-icon"><SearchIcon /></span>
             <input
               type="text"
-              className="pnav-search-input"
+              className="nav-search-input"
               placeholder="Search foods, cultures…"
               value={search}
               onChange={e => setSearch(e.target.value)}
@@ -195,26 +205,45 @@ export default function NavBar() {
 
       {/* Mobile drawer */}
       {mobileOpen && (
-        <div className="pnav-drawer">
-          <Link to="/about"      className="pnav-drawer-link" onClick={() => setMobileOpen(false)}>About Us</Link>
-          <Link to="/contribute" className="pnav-drawer-link pnav-drawer-contribute" onClick={() => setMobileOpen(false)}>✦ Contribute a Food</Link>
+        <div className="nav-drawer">
+          <a
+            href="#about"
+            className="nav-drawer-link"
+            onClick={(e) => { onAboutClick?.(e); setMobileOpen(false); }}
+          >
+            About Us
+          </a>
+          <Link
+            to="/contribute"
+            className="nav-drawer-link nav-drawer-contribute"
+            onClick={() => setMobileOpen(false)}
+          >
+            ✦ Contribute a Food
+          </Link>
+
           {isLoggedIn ? (
             <>
-              <div className="pnav-drawer-user">
-                <Avatar src={user.profile_picture} name={user.name} size={42} className="pnav-drawer-av" />
+              <div className="nav-drawer-user">
+                <Avatar src={user.profile_picture} name={user.name} size={42} className="nav-drawer-av" />
                 <div>
-                  <p className="pnav-drawer-name">{user.name}</p>
-                  <p className="pnav-drawer-email">{user.email}</p>
+                  <p className="nav-drawer-name">{user.name}</p>
+                  <p className="nav-drawer-email">{user.email}</p>
                 </div>
               </div>
-              <Link to="/homeUser" className="pnav-drawer-link" onClick={() => setMobileOpen(false)}>🍽 Community Feed</Link>
-              <Link to="/profile"  className="pnav-drawer-link" onClick={() => setMobileOpen(false)}>👤 My Profile</Link>
-              <button className="pnav-drawer-logout" onClick={handleLogout}><LogoutIcon /> Logout</button>
+              <Link to="/homeUser" className="nav-drawer-link" onClick={() => setMobileOpen(false)}>
+                🍽 Community Feed
+              </Link>
+              <Link to="/profile" className="nav-drawer-link" onClick={() => setMobileOpen(false)}>
+                👤 My Profile
+              </Link>
+              <button className="nav-drawer-logout" onClick={handleLogout}>
+                <LogoutIcon /> Logout
+              </button>
             </>
           ) : (
-            <div className="pnav-drawer-auth">
-              <Link to="/login"  className="pnav-drawer-login"  onClick={() => setMobileOpen(false)}>Login</Link>
-              <Link to="/signup" className="pnav-drawer-signup" onClick={() => setMobileOpen(false)}>Sign Up</Link>
+            <div className="nav-drawer-auth">
+              <Link to="/login"  className="nav-drawer-login"  onClick={() => setMobileOpen(false)}>Login</Link>
+              <Link to="/signup" className="nav-drawer-signup" onClick={() => setMobileOpen(false)}>Sign Up</Link>
             </div>
           )}
         </div>
