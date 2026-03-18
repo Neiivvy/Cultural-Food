@@ -3,14 +3,13 @@ import multer from "multer";
 import { v2 as cloudinary } from "cloudinary";
 import { Readable } from "stream";
 import protect from "../middleware/authMiddleware.js";
-import adminOnly from "../middleware/adminMiddleware.js";
 import {
-  getApprovedFoods, getFoodById, submitFood,
+  getApprovedFoods, getFoodById, submitFood, getFilterOptions
 } from "../controllers/foodController.js";
 
 const router = Router();
 
-// ── Food image upload middleware ───────────────────────────────
+// Food image upload middleware
 class CloudinaryStorage {
   _handleFile(_req, file, cb) {
     const stream = cloudinary.uploader.upload_stream(
@@ -30,11 +29,12 @@ const uploadFoodImage = multer({
     /^image\/(jpeg|jpg|png|webp)$/.test(file.mimetype) ? cb(null,true) : cb(new Error("Images only"))
 }).single("image");
 
-// ── Public ────────────────────────────────────────────────────
-router.get("/",    getApprovedFoods);
-router.get("/:id", getFoodById);
+// ── Public routes ─────────────────────────────────────────────
+router.get("/filters", getFilterOptions);   // MUST be before /:id
+router.get("/",        getApprovedFoods);
+router.get("/:id",     getFoodById);
 
-// ── Authenticated: submit food ────────────────────────────────
+// ── Auth: submit food ─────────────────────────────────────────
 router.post("/", protect, (req, res, next) => {
   uploadFoodImage(req, res, (err) => {
     if (err) return res.status(400).json({ success: false, message: err.message });

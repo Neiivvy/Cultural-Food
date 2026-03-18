@@ -1,338 +1,381 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import NavBar from '../components/NavBar';
 import { getApprovedFoods } from '../api/foodService';
 import './FoodCategoryPage.css';
 
-/* ── Category metadata ─────────────────────────────────────────── */
-const CATEGORY_META = {
-  'newari': {
-    label: 'Newari', nepali: 'नेवारी',
-    desc: 'Explore the rich food traditions of the Newar community — the original inhabitants of the Kathmandu Valley.',
+/* ── Category definitions ──────────────────────────────────────── */
+const CATEGORIES = [
+  {
+    id: 'newari',
+    label: 'Newari',
+    nepali: 'नेवारी',
+    desc: 'The Newar community — original inhabitants of the Kathmandu Valley — have one of Nepal\'s oldest and most elaborate food cultures.',
     cultures: ['Newari'],
-    color: '#7c2d2d', bg: '#f9f0f0',
-    image: 'https://images.unsplash.com/photo-1567337710282-00832b415979?w=1400&q=80',
+    accent: '#7c2d2d',
+    accentLight: '#f9f0f0',
+    image: 'https://images.unsplash.com/photo-1567337710282-00832b415979?w=800&q=80',
   },
-  'brahmin-chhetri': {
-    label: 'Brahmin / Chhetri', nepali: 'ब्राह्मण / क्षेत्री',
-    desc: 'Discover traditional foods of the Brahmin and Chhetri hill communities — rooted in Hindu ritual and the mid-hill agricultural calendar.',
+  {
+    id: 'brahmin-chhetri',
+    label: 'Brahmin / Chhetri',
+    nepali: 'ब्राह्मण / क्षेत्री',
+    desc: 'Rooted in Hindu ritual and the mid-hill agricultural calendar — dal bhat, ghee, seasonal vegetables, and festival sweets.',
     cultures: ['Brahmin/Chhetri'],
-    color: '#1f6058', bg: '#edf7f5',
-    image: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=1400&q=80',
+    accent: '#1f6058',
+    accentLight: '#edf7f5',
+    image: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=800&q=80',
   },
-  'madhesi': {
-    label: 'Madhesi', nepali: 'मधेसी',
-    desc: 'Foods of the Terai plains — Madhesi and Tharu communities shaped by the fertile lowlands and the Gangetic tradition.',
+  {
+    id: 'madhesi',
+    label: 'Madhesi',
+    nepali: 'मधेसी',
+    desc: 'From the fertile Terai plains — Madhesi and Tharu communities shaped by the Gangetic tradition and festivals like Chhath.',
     cultures: ['Madhesi', 'Tharu'],
-    color: '#92400e', bg: '#fef3c7',
-    image: 'https://images.unsplash.com/photo-1631515243349-e0cb75fb8d3a?w=1400&q=80',
+    accent: '#92400e',
+    accentLight: '#fef3c7',
+    image: 'https://images.unsplash.com/photo-1631515243349-e0cb75fb8d3a?w=800&q=80',
   },
-  'janajati': {
-    label: 'Janajati', nepali: 'जनजाति',
-    desc: "Nepal's diverse indigenous nationalities — Tamang, Rai, Gurung, Magar, Limbu, Sherpa, Thakali and more.",
+  {
+    id: 'janajati',
+    label: 'Janajati',
+    nepali: 'जनजाति',
+    desc: 'Nepal\'s diverse indigenous nationalities — Tamang, Rai, Gurung, Magar, Limbu, Sherpa, Thakali and more.',
     cultures: ['Tamang', 'Rai', 'Gurung', 'Magar', 'Limbu', 'Sherpa', 'Thakali'],
-    color: '#1d4ed8', bg: '#eff6ff',
-    image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1400&q=80',
+    accent: '#1d4ed8',
+    accentLight: '#eff6ff',
+    image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=800&q=80',
   },
-};
+];
 
-const SEASONS   = ['Spring', 'Summer', 'Autumn', 'Winter', 'All Season'];
-const TASTES    = ['Sweet', 'Spicy', 'Sour', 'Salty', 'Bitter', 'Umami', 'Mixed'];
-const FESTIVALS = ['Dashain', 'Tihar', 'Chhath', 'Maghe Sankranti', 'Indra Jatra', 'Yomari Punhi', 'Maghi', 'Janai Purnima'];
-const MEALS     = ['Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert'];
+/* ── Filter definitions ─────────────────────────────────────────── */
+const FILTER_DEFS = [
+  { key: 'taste',      label: '👅 Taste',      options: ['Sweet','Spicy','Sour','Salty','Bitter','Umami','Mixed'] },
+  { key: 'season',     label: '🌿 Season',     options: ['Spring','Summer','Autumn','Winter','All Season'] },
+  { key: 'festival',   label: '🎉 Festival',   options: ['Dashain','Tihar','Chhath','Maghe Sankranti','Indra Jatra','Yomari Punhi','Maghi','Janai Purnima'] },
+  { key: 'meal_type',  label: '🍽 Meal',       options: ['Breakfast','Lunch','Dinner','Snack','Dessert'] },
+  { key: 'occasion',   label: '🕯 Occasion',   options: ['Festival','Wedding','Everyday','Offering'] },
+  { key: 'ingredient', label: '🌾 Ingredient', options: ['Rice','Lentil','Meat','Buckwheat','Millet','Barley','Dairy','Vegetables','Legumes'] },
+  { key: 'veg_status', label: '🥬 Diet',       options: ['veg','non-veg','vegan'] },
+];
 
 /* ── Food card ─────────────────────────────────────────────────── */
-function FoodCard({ food, onClick }) {
+function FoodCard({ food, accent, onClick }) {
+  const [imgErr, setImgErr] = useState(false);
   return (
-    <div className="fcp-food-card" onClick={onClick}>
-      <div className="fcp-food-img-wrap">
-        {food.image_url
-          ? <img src={food.image_url} alt={food.food_name} className="fcp-food-img" />
-          : <div className="fcp-food-img-placeholder">🍽️</div>
+    <article className="fcp-card" onClick={onClick}>
+      <div className="fcp-card-img-wrap">
+        {food.image_url && !imgErr
+          ? <img src={food.image_url} alt={food.food_name} onError={() => setImgErr(true)} className="fcp-card-img" />
+          : <div className="fcp-card-img-placeholder">🍽️</div>
         }
-      </div>
-      <div className="fcp-food-body">
-        <p className="fcp-food-culture">{food.culture_name || '—'}</p>
-        <h3 className="fcp-food-name">{food.food_name}</h3>
-        {food.food_name_nepali && (
-          <p className="fcp-food-nepali">{food.food_name_nepali}</p>
+        {food.veg_status && (
+          <span className={`fcp-veg-dot fcp-veg-dot--${food.veg_status}`} title={food.veg_status} />
         )}
-        <p className="fcp-food-desc">
-          {food.description?.slice(0, 90)}{food.description?.length > 90 ? '…' : ''}
-        </p>
-        <div className="fcp-food-tags">
-          {food.location && <span className="fcp-tag">📍 {food.location}</span>}
-        </div>
       </div>
-    </div>
+      <div className="fcp-card-body">
+        <p className="fcp-card-culture" style={{ color: accent }}>{food.culture_name}</p>
+        <h3 className="fcp-card-name">{food.food_name}</h3>
+        {food.food_name_nepali && <p className="fcp-card-nepali">{food.food_name_nepali}</p>}
+        <p className="fcp-card-desc">
+          {food.description?.slice(0, 85)}{food.description?.length > 85 ? '…' : ''}
+        </p>
+        {food.location && <span className="fcp-card-loc">📍 {food.location}</span>}
+      </div>
+    </article>
   );
 }
 
 /* ── Main page ─────────────────────────────────────────────────── */
 export default function FoodCategoryPage() {
-  const { categoryId }  = useParams();
-  const navigate        = useNavigate();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const meta = CATEGORY_META[categoryId];
+  // Active category — from URL or default to first
+  const [activeCatId, setActiveCatId] = useState(
+    searchParams.get('category') || 'newari'
+  );
+  const meta = CATEGORIES.find(c => c.id === activeCatId) || CATEGORIES[0];
 
-  // Filter state — initialise from URL params
-  const [activeCulture,  setActiveCulture]  = useState(searchParams.get('culture')  || '');
-  const [activeSeason,   setActiveSeason]   = useState(searchParams.get('season')   || '');
-  const [activeTaste,    setActiveTaste]    = useState(searchParams.get('taste')     || '');
-  const [activeFestival, setActiveFestival] = useState(searchParams.get('festival') || '');
-  const [activeMeal,     setActiveMeal]     = useState(searchParams.get('meal')     || '');
-  const [search,         setSearch]         = useState(searchParams.get('q')        || '');
-  const [searchInput,    setSearchInput]    = useState(searchParams.get('q')        || '');
+  // Filters
+  const [filters, setFilters] = useState(() => {
+    const f = {};
+    FILTER_DEFS.forEach(d => { const v = searchParams.get(d.key); if (v) f[d.key] = v; });
+    if (searchParams.get('culture')) f.culture = searchParams.get('culture');
+    return f;
+  });
+  const [search,      setSearch]      = useState(searchParams.get('q') || '');
+  const [searchInput, setSearchInput] = useState(searchParams.get('q') || '');
+  const [openSection, setOpenSection] = useState('taste');
 
   const [foods,   setFoods]   = useState([]);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState('');
 
-  // Redirect if category unknown
+  // Sync state → URL
   useEffect(() => {
-    if (!meta) navigate('/', { replace: true });
-  }, [meta, navigate]);
-
-  // Sync filters → URL params
-  useEffect(() => {
-    const p = {};
-    if (activeCulture)  p.culture  = activeCulture;
-    if (activeSeason)   p.season   = activeSeason;
-    if (activeTaste)    p.taste    = activeTaste;
-    if (activeFestival) p.festival = activeFestival;
-    if (activeMeal)     p.meal     = activeMeal;
-    if (search)         p.q        = search;
+    const p = { category: activeCatId };
+    Object.entries(filters).forEach(([k, v]) => { if (v) p[k] = v; });
+    if (search) p.q = search;
     setSearchParams(p, { replace: true });
-  }, [activeCulture, activeSeason, activeTaste, activeFestival, activeMeal, search, setSearchParams]);
+  }, [activeCatId, filters, search, setSearchParams]);
 
-  // Fetch foods from API
+  // Fetch foods whenever category or filters change
   const fetchFoods = useCallback(async () => {
-    if (!meta) return;
     setLoading(true); setError('');
     try {
-      // Build culture_id list from category cultures
-      // For now pass culture names as search hint — backend will filter by culture_id
-      const params = {};
-      if (activeSeason)   params.season   = activeSeason;
-      if (activeTaste)    params.taste    = activeTaste;
-      if (activeFestival) params.festival = activeFestival;
-      if (search)         params.search   = search;
-      // Culture filter: if activeCulture set use that, else pass all cultures for this category
-      if (activeCulture)  params.culture_name = activeCulture;
-      else                params.category     = categoryId;
+      const params = { category_slug: activeCatId };
+      FILTER_DEFS.forEach(d => {
+        if (d.key !== 'veg_status' && filters[d.key]) params[d.key] = filters[d.key];
+      });
+      if (filters.veg_status) params.veg_status = filters.veg_status;
+      if (search) params.search = search;
 
-      const res = await getApprovedFoods(params);
-      setFoods(res.data.data.foods || []);
+      const res  = await getApprovedFoods(params);
+      let   data = res.data.data.foods || [];
+
+      // Client-side sub-culture filter
+      if (filters.culture) {
+        data = data.filter(f => f.culture_name === filters.culture);
+      }
+      setFoods(data);
     } catch {
       setError('Failed to load foods. Please try again.');
     } finally {
       setLoading(false);
     }
-  }, [meta, categoryId, activeSeason, activeTaste, activeFestival, activeCulture, search]);
+  }, [activeCatId, filters, search]);
 
   useEffect(() => { fetchFoods(); }, [fetchFoods]);
 
-  const clearFilters = () => {
-    setActiveCulture(''); setActiveSeason(''); setActiveTaste('');
-    setActiveFestival(''); setActiveMeal(''); setSearch(''); setSearchInput('');
+  const switchCategory = (id) => {
+    setActiveCatId(id);
+    setFilters({});
+    setSearch('');
+    setSearchInput('');
   };
 
-  const hasFilters = activeCulture || activeSeason || activeTaste || activeFestival || activeMeal || search;
-  const activeCount = [activeCulture, activeSeason, activeTaste, activeFestival, activeMeal, search].filter(Boolean).length;
+  const toggleFilter = (key, value) => {
+    setFilters(prev => ({ ...prev, [key]: prev[key] === value ? undefined : value }));
+  };
 
-  if (!meta) return null;
+  const clearAll = () => { setFilters({}); setSearch(''); setSearchInput(''); };
+
+  const activeCount = Object.values(filters).filter(Boolean).length + (search ? 1 : 0);
 
   return (
     <div className="fcp">
       <NavBar />
 
-      {/* ── Hero banner ── */}
-      <div className="fcp-hero" style={{ '--cat-color': meta.color }}>
-        <img src={meta.image} alt={meta.label} className="fcp-hero-img" />
-        <div className="fcp-hero-overlay" />
-        <div className="fcp-hero-inner">
-          <Link to="/" className="fcp-breadcrumb">← Home</Link>
-          <div className="fcp-hero-text">
-            <span className="fcp-hero-nepali">{meta.nepali}</span>
-            <h1 className="fcp-hero-title">{meta.label} Foods</h1>
-            <p className="fcp-hero-desc">{meta.desc}</p>
-            <div className="fcp-hero-cultures">
-              {meta.cultures.map(c => (
-                <span key={c} className="fcp-hero-chip">{c}</span>
-              ))}
-            </div>
-          </div>
+      {/* ════════════════════════════════════════════════════════
+          PAGE HEADER — title + breadcrumb
+         ════════════════════════════════════════════════════════ */}
+      <div className="fcp-page-header">
+        <div className="fcp-page-header-inner">
+         
+          <h1 className="fcp-page-title">Explore Foods by Culture</h1>
+          <p className="fcp-page-sub">Select a community to discover its traditional dishes</p>
         </div>
       </div>
 
-      {/* ── Content ── */}
+      {/* ════════════════════════════════════════════════════════
+          CATEGORY TABS
+         ════════════════════════════════════════════════════════ */}
+      <div className="fcp-cat-bar">
+        <div className="fcp-cat-bar-inner">
+          {CATEGORIES.map(cat => (
+            <button
+              key={cat.id}
+              className={`fcp-cat-tab ${activeCatId === cat.id ? 'active' : ''}`}
+              style={{
+                '--tab-accent':  cat.accent,
+                '--tab-light':   cat.accentLight,
+              }}
+              onClick={() => switchCategory(cat.id)}
+            >
+              <div className="fcp-cat-tab-img-wrap">
+                <img src={cat.image} alt={cat.label} className="fcp-cat-tab-img" />
+                <div className="fcp-cat-tab-img-scrim" />
+              </div>
+              <div className="fcp-cat-tab-text">
+                <span className="fcp-cat-tab-nepali">{cat.nepali}</span>
+                <span className="fcp-cat-tab-label">{cat.label}</span>
+              </div>
+              {activeCatId === cat.id && <div className="fcp-cat-tab-bar" />}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Active category description strip */}
+      <div className="fcp-cat-desc-strip" style={{ '--accent': meta.accent, '--accent-light': meta.accentLight }}>
+        <div className="fcp-cat-desc-inner">
+          <p className="fcp-cat-desc-text">{meta.desc}</p>
+          {meta.cultures.length > 1 && (
+            <div className="fcp-cat-culture-chips">
+              {meta.cultures.map(c => (
+                <button
+                  key={c}
+                  className={`fcp-culture-chip ${filters.culture === c ? 'active' : ''}`}
+                  style={{ '--accent': meta.accent, '--accent-light': meta.accentLight }}
+                  onClick={() => toggleFilter('culture', c)}
+                >{c}</button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ════════════════════════════════════════════════════════
+          BODY: sidebar + food grid
+         ════════════════════════════════════════════════════════ */}
       <div className="fcp-body">
-        <div className="fcp-body-inner">
 
-          {/* ── Sidebar filters ── */}
-          <aside className="fcp-sidebar">
-            <div className="fcp-sidebar-header">
-              <h3 className="fcp-sidebar-title">Filters</h3>
-              {hasFilters && (
-                <button className="fcp-clear-btn" onClick={clearFilters}>
-                  Clear {activeCount > 0 ? `(${activeCount})` : ''}
-                </button>
-              )}
-            </div>
+        {/* ── Sidebar ── */}
+        <aside className="fcp-sidebar">
+          <div className="fcp-sidebar-head">
+            <h2 className="fcp-sidebar-title">Filters</h2>
+            {activeCount > 0 && (
+              <button className="fcp-clear-all" onClick={clearAll}>
+                Clear ({activeCount})
+              </button>
+            )}
+          </div>
 
-            {/* Search */}
-            <div className="fcp-filter-group">
-              <p className="fcp-filter-label">Search</p>
-              <form onSubmit={(e) => { e.preventDefault(); setSearch(searchInput); }}
-                className="fcp-search-form">
-                <input
-                  type="text"
-                  className="fcp-search-input"
-                  placeholder="Search dishes…"
-                  value={searchInput}
-                  onChange={e => setSearchInput(e.target.value)}
-                />
-                <button type="submit" className="fcp-search-btn">→</button>
-              </form>
-            </div>
+          {/* Search */}
+          <form
+            className="fcp-search-wrap"
+            onSubmit={e => { e.preventDefault(); setSearch(searchInput); }}
+          >
+            <svg className="fcp-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input
+              type="text" placeholder="Search dishes…"
+              className="fcp-search-input"
+              value={searchInput}
+              onChange={e => setSearchInput(e.target.value)}
+              style={{ '--accent': meta.accent }}
+            />
+            {searchInput && (
+              <button type="button" className="fcp-search-clear"
+                onClick={() => { setSearchInput(''); setSearch(''); }}>✕</button>
+            )}
+          </form>
 
-            {/* Community sub-filter (only for Janajati / Madhesi) */}
-            {meta.cultures.length > 1 && (
-              <div className="fcp-filter-group">
-                <p className="fcp-filter-label">Community</p>
-                <div className="fcp-chip-col">
-                  {meta.cultures.map(c => (
+          {/* Accordion filters */}
+          {FILTER_DEFS.map(def => (
+            <div key={def.key} className={`fcp-filter-section ${openSection === def.key ? 'open' : ''}`}>
+              <button
+                className="fcp-filter-header"
+                onClick={() => setOpenSection(openSection === def.key ? '' : def.key)}
+              >
+                <span className="fcp-filter-label">{def.label}</span>
+                {filters[def.key] && (
+                  <span className="fcp-filter-active-badge" style={{ background: meta.accent }}>
+                    {filters[def.key]}
+                  </span>
+                )}
+                <svg className="fcp-filter-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </button>
+              <div className="fcp-filter-body">
+                <div className="fcp-chip-list">
+                  {def.options.map(opt => (
                     <button
-                      key={c}
-                      className={`fcp-chip ${activeCulture === c ? 'active' : ''}`}
-                      onClick={() => setActiveCulture(activeCulture === c ? '' : c)}
-                      style={{ '--chip-color': meta.color }}
-                    >{c}</button>
+                      key={opt}
+                      className={`fcp-chip ${filters[def.key] === opt ? 'active' : ''}`}
+                      style={{ '--accent': meta.accent, '--accent-light': meta.accentLight }}
+                      onClick={() => toggleFilter(def.key, opt)}
+                    >{opt}</button>
                   ))}
                 </div>
               </div>
-            )}
-
-            {/* Season */}
-            <div className="fcp-filter-group">
-              <p className="fcp-filter-label">🌿 Season</p>
-              <div className="fcp-chip-col">
-                {SEASONS.map(s => (
-                  <button
-                    key={s}
-                    className={`fcp-chip ${activeSeason === s ? 'active' : ''}`}
-                    onClick={() => setActiveSeason(activeSeason === s ? '' : s)}
-                    style={{ '--chip-color': meta.color }}
-                  >{s}</button>
-                ))}
-              </div>
             </div>
+          ))}
+        </aside>
 
-            {/* Taste */}
-            <div className="fcp-filter-group">
-              <p className="fcp-filter-label">👅 Taste</p>
-              <div className="fcp-chip-col">
-                {TASTES.map(t => (
-                  <button
-                    key={t}
-                    className={`fcp-chip ${activeTaste === t ? 'active' : ''}`}
-                    onClick={() => setActiveTaste(activeTaste === t ? '' : t)}
-                    style={{ '--chip-color': meta.color }}
-                  >{t}</button>
-                ))}
-              </div>
+        {/* ── Main content ── */}
+        <main className="fcp-main">
+
+          {/* Active pills */}
+          {activeCount > 0 && (
+            <div className="fcp-active-pills">
+              {Object.entries(filters).map(([k, v]) => v ? (
+                <button key={k} className="fcp-pill" style={{ '--accent': meta.accent }} onClick={() => toggleFilter(k, v)}>
+                  {v} <span>✕</span>
+                </button>
+              ) : null)}
+              {search && (
+                <button className="fcp-pill" style={{ '--accent': meta.accent }}
+                  onClick={() => { setSearch(''); setSearchInput(''); }}>
+                  "{search}" <span>✕</span>
+                </button>
+              )}
             </div>
+          )}
 
-            {/* Festival */}
-            <div className="fcp-filter-group">
-              <p className="fcp-filter-label">🎉 Festival</p>
-              <div className="fcp-chip-col">
-                {FESTIVALS.map(f => (
-                  <button
-                    key={f}
-                    className={`fcp-chip ${activeFestival === f ? 'active' : ''}`}
-                    onClick={() => setActiveFestival(activeFestival === f ? '' : f)}
-                    style={{ '--chip-color': meta.color }}
-                  >{f}</button>
-                ))}
-              </div>
-            </div>
-
-            {/* Meal type */}
-            <div className="fcp-filter-group">
-              <p className="fcp-filter-label">🍽 Meal Type</p>
-              <div className="fcp-chip-col">
-                {MEALS.map(m => (
-                  <button
-                    key={m}
-                    className={`fcp-chip ${activeMeal === m ? 'active' : ''}`}
-                    onClick={() => setActiveMeal(activeMeal === m ? '' : m)}
-                    style={{ '--chip-color': meta.color }}
-                  >{m}</button>
-                ))}
-              </div>
-            </div>
-          </aside>
-
-          {/* ── Food grid ── */}
-          <div className="fcp-main">
-
-            {/* Active filter pills row */}
-            {hasFilters && (
-              <div className="fcp-active-filters">
-                {activeCulture  && <span className="fcp-active-pill" onClick={() => setActiveCulture('')}>Community: {activeCulture} ✕</span>}
-                {activeSeason   && <span className="fcp-active-pill" onClick={() => setActiveSeason('')}>Season: {activeSeason} ✕</span>}
-                {activeTaste    && <span className="fcp-active-pill" onClick={() => setActiveTaste('')}>Taste: {activeTaste} ✕</span>}
-                {activeFestival && <span className="fcp-active-pill" onClick={() => setActiveFestival('')}>Festival: {activeFestival} ✕</span>}
-                {activeMeal     && <span className="fcp-active-pill" onClick={() => setActiveMeal('')}>Meal: {activeMeal} ✕</span>}
-                {search         && <span className="fcp-active-pill" onClick={() => { setSearch(''); setSearchInput(''); }}>"{search}" ✕</span>}
-              </div>
-            )}
-
-            {/* Result count */}
-            <div className="fcp-result-bar">
-              <p className="fcp-result-count">
-                {loading ? 'Loading…' : `${foods.length} dish${foods.length !== 1 ? 'es' : ''} found`}
-              </p>
-            </div>
-
-            {/* States */}
-            {loading && (
-              <div className="fcp-state">
-                <div className="fcp-spinner" />
-                <p>Loading dishes…</p>
-              </div>
-            )}
-            {!loading && error && (
-              <div className="fcp-state fcp-error">
-                <p>{error}</p>
-                <button className="fcp-retry" onClick={fetchFoods}>Try again</button>
-              </div>
-            )}
-            {!loading && !error && foods.length === 0 && (
-              <div className="fcp-state fcp-empty">
-                <span className="fcp-empty-icon">🍽️</span>
-                <h3>No dishes found</h3>
-                <p>Try adjusting your filters or clearing them.</p>
-                {hasFilters && (
-                  <button className="fcp-retry" onClick={clearFilters}>Clear filters</button>
-                )}
-              </div>
-            )}
-            {!loading && !error && foods.length > 0 && (
-              <div className="fcp-grid">
-                {foods.map(food => (
-                  <FoodCard
-                    key={food.food_id}
-                    food={food}
-                    onClick={() => navigate(`/food/${food.food_id}`)}
-                  />
-                ))}
-              </div>
-            )}
+          {/* Result count */}
+          <div className="fcp-result-bar">
+            <p className="fcp-result-count">
+              {loading
+                ? 'Loading…'
+                : <><strong>{foods.length}</strong> {foods.length === 1 ? 'dish' : 'dishes'} found in <strong>{meta.label}</strong></>
+              }
+            </p>
           </div>
-        </div>
+
+          {/* Loading */}
+          {loading && (
+            <div className="fcp-state">
+              <div className="fcp-spinner" style={{ borderTopColor: meta.accent }} />
+              <p>Loading dishes…</p>
+            </div>
+          )}
+
+          {/* Error */}
+          {!loading && error && (
+            <div className="fcp-state">
+              <span style={{ fontSize: '2.5rem' }}>⚠️</span>
+              <p className="fcp-state-msg">{error}</p>
+              <button className="fcp-retry-btn" style={{ background: meta.accent }} onClick={fetchFoods}>Try again</button>
+            </div>
+          )}
+
+          {/* Empty */}
+          {!loading && !error && foods.length === 0 && (
+            <div className="fcp-state">
+              <span style={{ fontSize: '3rem' }}>🍽️</span>
+              <h3 className="fcp-state-title">No dishes found</h3>
+              <p className="fcp-state-msg">
+                {activeCount > 0
+                  ? 'Try adjusting or clearing your filters.'
+                  : `No ${meta.label} foods in the database yet.`
+                }
+              </p>
+              {activeCount > 0 && (
+                <button className="fcp-retry-btn" style={{ background: meta.accent }} onClick={clearAll}>
+                  Clear filters
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Grid */}
+          {!loading && !error && foods.length > 0 && (
+            <div className="fcp-grid">
+              {foods.map(food => (
+                <FoodCard
+                  key={food.food_id}
+                  food={food}
+                  accent={meta.accent}
+                  onClick={() => navigate(`/food/${food.food_id}`)}
+                />
+              ))}
+            </div>
+          )}
+        </main>
       </div>
     </div>
   );
