@@ -78,3 +78,14 @@ export const submitFood = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error." });
   }
 };
+
+// ── GET /api/foods/:id/recommendations ────────────────────────
+export const getRecommendations = async (req, res) => {
+  try {
+    const recommendations = await Food.getRecommendations(req.params.id);
+    res.json({ success: true, data: { recommendations } });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error." });
+  }
+};

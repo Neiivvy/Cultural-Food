@@ -20,6 +20,7 @@ export default function UserHomePage() {
   const [cultureFilter, setCultureFilter] = useState("");
   const [loading,       setLoading]       = useState(true);
   const [error,         setError]         = useState("");
+  const [sidebarOpen,   setSidebarOpen]   = useState(false);
 
   const { cultures } = useCultures();
   const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -32,21 +33,18 @@ export default function UserHomePage() {
       if (cultureFilter) params.culture_id = cultureFilter;
 
       if (typeFilter === "question") {
-        // Only fetch questions
         const qRes = await getQuestions();
         let qs = qRes.data.data.questions || [];
         if (cultureFilter) qs = qs.filter(q => String(q.culture_id) === cultureFilter);
         setQuestions(qs);
         setPosts([]);
       } else if (typeFilter === "all") {
-        // Fetch posts + questions in parallel, merge by date
         const [postRes, qRes] = await Promise.all([getFeed(params), getQuestions()]);
         let qs = qRes.data.data.questions || [];
         if (cultureFilter) qs = qs.filter(q => String(q.culture_id) === cultureFilter);
         setPosts(postRes.data.data.posts || []);
         setQuestions(qs);
       } else {
-        // recipe or reel only
         const postRes = await getFeed(params);
         setPosts(postRes.data.data.posts || []);
         setQuestions([]);
@@ -66,7 +64,6 @@ export default function UserHomePage() {
     ));
   };
 
-  // Merge posts + questions sorted by date for "all" tab
   const merged = typeFilter === "all"
     ? [...posts.map(p => ({ ...p, _kind: "post" })),
        ...questions.map(q => ({ ...q, _kind: "question", created_at: q.created_at }))]
@@ -77,22 +74,26 @@ export default function UserHomePage() {
 
   const total = merged.length;
 
+  const activeCultureName = cultures.find(c => String(c.culture_id) === cultureFilter)?.culture_name;
+
   return (
     <div className="uhome">
-      <div className="uhome-hero">
-        <div className="uhome-hero-inner">
-          <div className="uhome-greeting">
-            <img src="https://api.iconify.design/noto/waving-hand.svg" alt="" width="28" height="28" className="uhome-wave" />
-            <span>Welcome back, <strong>{user.name?.split(" ")[0] || "Friend"}</strong>!</span>
-          </div>
-          <h1 className="uhome-title">What's <span>cooking</span> today?</h1>
-          <p className="uhome-sub">Discover recipes, reels, and cultural stories from across Nepal.</p>
-        </div>
-      </div>
 
-      <div className="uhome-content">
-        {/* Type tabs */}
-        <div className="uhome-filters">
+      {/* ── Top bar: welcome left + type tabs center ── */}
+      <div className="uhome-topbar">
+        <div className="uhome-topbar-inner">
+          <div className="uhome-welcome">
+            <span className="uhome-wave">👋</span>
+            <div>
+              <p className="uhome-welcome-name">
+                Welcome, <strong>{user.name?.split(" ")[0] || "Friend"}</strong>
+              </p>
+              <p className="uhome-welcome-sub">
+                What's <span>cooking</span> today?
+              </p>
+            </div>
+          </div>
+
           <div className="uhome-type-tabs">
             {TYPE_TABS.map(f => (
               <button
@@ -100,63 +101,129 @@ export default function UserHomePage() {
                 className={`uhome-tab ${typeFilter === f.id ? "active" : ""}`}
                 onClick={() => setTypeFilter(f.id)}
               >
-                <span>{f.emoji}</span> {f.label}
+                <span className="uhome-tab-emoji">{f.emoji}</span>
+                <span className="uhome-tab-label">{f.label}</span>
               </button>
             ))}
           </div>
-          <select
-            className="uhome-culture-select"
-            value={cultureFilter}
-            onChange={e => setCultureFilter(e.target.value)}
+
+          {/* Mobile sidebar toggle */}
+          <button
+            className="uhome-sidebar-toggle"
+            onClick={() => setSidebarOpen(o => !o)}
+            aria-label="Toggle culture filter"
           >
-            <option value="">All Cultures</option>
-            {cultures.map(c => (
-              <option key={c.culture_id} value={c.culture_id}>{c.culture_name}</option>
-            ))}
-          </select>
+            <span>🗂</span>
+            <span>Filter</span>
+            {cultureFilter && <span className="uhome-toggle-dot" />}
+          </button>
         </div>
+      </div>
 
-        {/* Culture chips */}
-        <div className="uhome-chips">
-          <button className={`uhome-chip ${!cultureFilter ? "active" : ""}`} onClick={() => setCultureFilter("")}>All</button>
-          {cultures.map(c => (
-            <button
-              key={c.culture_id}
-              className={`uhome-chip ${cultureFilter === String(c.culture_id) ? "active" : ""}`}
-              onClick={() => setCultureFilter(String(c.culture_id))}
-            >
-              {c.culture_name}
-            </button>
-          ))}
-        </div>
+      {/* ── Body: sidebar + feed ── */}
+      <div className="uhome-body">
 
-        {!loading && !error && (
-          <p className="uhome-count">{total} {total === 1 ? "post" : "posts"}</p>
+        {/* Mobile overlay */}
+        {sidebarOpen && (
+          <div className="uhome-overlay" onClick={() => setSidebarOpen(false)} />
         )}
 
-        {loading && <div className="uhome-empty"><p>Loading…</p></div>}
-        {!loading && error && (
-          <div className="uhome-empty">
-            <p>{error}</p>
-            <button className="uhome-retry-btn" onClick={loadFeed}>Retry</button>
+        {/* ── Sidebar ── */}
+        <aside className={`uhome-sidebar ${sidebarOpen ? "open" : ""}`}>
+
+          <div className="uhome-sidebar-section">
+            <p className="uhome-sidebar-heading">Browse by Culture</p>
+            <ul className="uhome-culture-list">
+              <li>
+                <button
+                  className={`uhome-culture-btn ${!cultureFilter ? "active" : ""}`}
+                  onClick={() => { setCultureFilter(""); setSidebarOpen(false); }}
+                >
+                  <span className="uhome-culture-icon"></span>
+                  <span>All Cultures</span>
+                </button>
+              </li>
+              {cultures.map(c => (
+                <li key={c.culture_id}>
+                  <button
+                    className={`uhome-culture-btn ${cultureFilter === String(c.culture_id) ? "active" : ""}`}
+                    onClick={() => { setCultureFilter(String(c.culture_id)); setSidebarOpen(false); }}
+                  >
+                    <span className="uhome-culture-icon"></span>
+                    <span>{c.culture_name}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
           </div>
-        )}
 
-        {!loading && !error && (
-          <div className="uhome-feed">
-            {merged.length === 0
-              ? <div className="uhome-empty">
-                  <img src="https://api.iconify.design/noto/fork-and-knife-with-plate.svg" alt="" width="48" height="48" />
-                  <p>No posts found — try a different filter!</p>
-                </div>
-              : merged.map(item =>
-                  item._kind === "question"
-                    ? <QuestionCard key={`q-${item.question_id}`} question={item} />
-                    : <PostCard key={`p-${item.post_id}`} post={item} onLikeChange={handleLikeChange} />
+          <div className="uhome-sidebar-divider" />
+
+          <div className="uhome-sidebar-section">
+            <p className="uhome-sidebar-heading">📊 Feed Stats</p>
+            <div className="uhome-stat-card">
+              <span className="uhome-stat-num">{total}</span>
+              <span className="uhome-stat-label">
+                {total === 1 ? "post" : "posts"}{activeCultureName ? ` in ${activeCultureName}` : " in feed"}
+              </span>
+            </div>
+          </div>
+        </aside>
+
+        {/* ── Main feed ── */}
+        <main className="uhome-main">
+
+          {/* Active filter badge */}
+          {(cultureFilter || typeFilter !== "all") && (
+            <div className="uhome-active-filters">
+              {typeFilter !== "all" && (
+                <span className="uhome-filter-badge maroon">
+                  {TYPE_TABS.find(t => t.id === typeFilter)?.emoji}{" "}
+                  {TYPE_TABS.find(t => t.id === typeFilter)?.label}
+                  <button onClick={() => setTypeFilter("all")}>×</button>
+                </span>
+              )}
+              {cultureFilter && (
+                <span className="uhome-filter-badge teal">
+                  🌏 {activeCultureName}
+                  <button onClick={() => setCultureFilter("")}>×</button>
+                </span>
+              )}
+            </div>
+          )}
+
+          {loading && (
+            <div className="uhome-empty">
+              <div className="uhome-spinner" />
+              <p>Loading feed…</p>
+            </div>
+          )}
+
+          {!loading && error && (
+            <div className="uhome-empty">
+              <p>{error}</p>
+              <button className="uhome-retry-btn" onClick={loadFeed}>Retry</button>
+            </div>
+          )}
+
+          {!loading && !error && (
+            <div className="uhome-feed">
+              {merged.length === 0
+                ? (
+                  <div className="uhome-empty">
+                    <img src="https://api.iconify.design/noto/fork-and-knife-with-plate.svg" alt="" width="52" height="52" />
+                    <p>No posts found — try a different filter!</p>
+                  </div>
                 )
-            }
-          </div>
-        )}
+                : merged.map(item =>
+                    item._kind === "question"
+                      ? <QuestionCard key={`q-${item.question_id}`} question={item} />
+                      : <PostCard key={`p-${item.post_id}`} post={item} onLikeChange={handleLikeChange} />
+                  )
+              }
+            </div>
+          )}
+        </main>
       </div>
     </div>
   );

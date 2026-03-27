@@ -4,7 +4,7 @@ import { v2 as cloudinary } from "cloudinary";
 import { Readable } from "stream";
 import protect from "../middleware/authMiddleware.js";
 import {
-  getApprovedFoods, getFoodById, submitFood, getFilterOptions
+  getApprovedFoods, getFoodById, submitFood, getFilterOptions, getRecommendations
 } from "../controllers/foodController.js";
 
 const router = Router();
@@ -30,9 +30,10 @@ const uploadFoodImage = multer({
 }).single("image");
 
 // ── Public routes ─────────────────────────────────────────────
-router.get("/filters", getFilterOptions);   // MUST be before /:id
-router.get("/",        getApprovedFoods);
-router.get("/:id",     getFoodById);
+router.get("/filters",              getFilterOptions);    // MUST be before /:id
+router.get("/",                      getApprovedFoods);
+router.get("/:id/recommendations",   getRecommendations);  // MUST be before /:id
+router.get("/:id",                   getFoodById);
 
 // ── Auth: submit food ─────────────────────────────────────────
 router.post("/", protect, (req, res, next) => {

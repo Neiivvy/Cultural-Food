@@ -166,6 +166,94 @@ const Food = {
     return rows;
   },
 
+  // ── Content-Based Recommendation Algorithm ────────────────────
+  // Scores every other approved food against the target food using:
+  //   Taste match    → +3 per matching value  (strongest flavour signal)
+  //   Culture match  → +2 if same community   (shared culinary tradition)
+  //   Festival match → +2 per matching value  (shared ritual context)
+  //   Season match   → +1 per matching value  (seasonal availability)
+  //   Occasion match → +1 per matching value  (use-case similarity)
+  // Returns top 6 foods with similarity_score > 0, ordered descending.
+  getRecommendations: async (foodId) => {
+    // Step 1: fetch the target food's culture_id
+    const [[target]] = await db.execute(
+      `SELECT culture_id FROM foods WHERE food_id = ? AND status = 'approved' LIMIT 1`,
+      [foodId]
+    );
+    if (!target) return [];
+
+    const targetCultureId = target.culture_id;
+
+    // Step 2: run the scoring query
+    // COALESCE handles foods with no matching attribute rows (returns 0 not NULL)
+    const [rows] = await db.execute(
+      `SELECT
+        f.food_id,
+        f.food_name,
+        f.food_name_nepali,
+        f.image_url,
+        f.veg_status,
+        c.culture_name,
+        (
+          COALESCE((
+            SELECT COUNT(*) * 3
+            FROM food_attributes fa_t
+            WHERE fa_t.food_id = f.food_id
+              AND fa_t.attribute_type = 'taste'
+              AND fa_t.attribute_value IN (
+                SELECT attribute_value FROM food_attributes
+                WHERE food_id = ? AND attribute_type = 'taste'
+              )
+          ), 0)
+          +
+          (CASE WHEN f.culture_id = ? THEN 2 ELSE 0 END)
+          +
+          COALESCE((
+            SELECT COUNT(*) * 2
+            FROM food_attributes fa_f
+            WHERE fa_f.food_id = f.food_id
+              AND fa_f.attribute_type = 'festival'
+              AND fa_f.attribute_value IN (
+                SELECT attribute_value FROM food_attributes
+                WHERE food_id = ? AND attribute_type = 'festival'
+              )
+          ), 0)
+          +
+          COALESCE((
+            SELECT COUNT(*) * 1
+            FROM food_attributes fa_s
+            WHERE fa_s.food_id = f.food_id
+              AND fa_s.attribute_type = 'season'
+              AND fa_s.attribute_value IN (
+                SELECT attribute_value FROM food_attributes
+                WHERE food_id = ? AND attribute_type = 'season'
+              )
+          ), 0)
+          +
+          COALESCE((
+            SELECT COUNT(*) * 1
+            FROM food_attributes fa_o
+            WHERE fa_o.food_id = f.food_id
+              AND fa_o.attribute_type = 'occasion'
+              AND fa_o.attribute_value IN (
+                SELECT attribute_value FROM food_attributes
+                WHERE food_id = ? AND attribute_type = 'occasion'
+              )
+          ), 0)
+        ) AS similarity_score
+      FROM foods f
+      LEFT JOIN cultures c ON f.culture_id = c.culture_id
+      WHERE f.food_id  != ?
+        AND f.status    = 'approved'
+      HAVING similarity_score > 0
+      ORDER BY similarity_score DESC
+      LIMIT 6`,
+      [foodId, targetCultureId, foodId, foodId, foodId, foodId]
+    );
+
+    return rows;
+  },
+
   // ── Distinct filter values for a category (for filter chips) ──
   getFilterOptions: async (category_slug) => {
     let categoryFilter = '';

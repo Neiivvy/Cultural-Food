@@ -9,6 +9,10 @@ export const submitFood = (formData) =>
   api.post("/foods", formData, { headers: { "Content-Type": "multipart/form-data" } });
 
 // Admin
+export const getRecommendations = (id) => api.get(`/foods/${id}/recommendations`);
+
+export const getFilterOptions = (category_slug) => api.get(`/foods/filters${category_slug ? `?category_slug=${category_slug}` : ''}`);
+
 export const adminGetFoods    = (status = "")  => api.get(`/admin/foods${status ? `?status=${status}` : ""}`);
 export const adminApproveFood = (id)           => api.put(`/admin/foods/${id}/approve`);
 export const adminRejectFood  = (id, note="")  => api.put(`/admin/foods/${id}/reject`, { note });
