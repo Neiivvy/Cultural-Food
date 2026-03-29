@@ -1,247 +1,297 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { submitContribution } from "../api/contributionService";
+import { getCultures } from "../api/cultureService";
 import UserNavBar from "../components/UserNavBar";
-import useCultures from "../hooks/useCultures";
-import { submitFood } from "../api/foodService";
 import "./ContributeFormPage.css";
 
-const SEASONS  = ["Spring","Summer","Autumn","Winter","All Season"];
-const TASTES   = ["Sweet","Salty","Spicy","Sour","Bitter","Umami","Mixed"];
+const TASTES     = ["Sweet","Spicy","Sour","Salty","Bitter","Umami","Mixed"];
+const SEASONS    = ["Spring","Summer","Autumn","Winter","All Season"];
+const FESTIVALS  = ["Dashain","Tihar","Chhath","Maghe Sankranti","Indra Jatra",
+                    "Yomari Punhi","Maghi","Janai Purnima","Teej","Other"];
+const MEAL_TYPES = ["Breakfast","Lunch","Dinner","Snack","Dessert"];
+const OCCASIONS  = ["Festival","Wedding","Everyday","Offering","Funeral"];
 
 export default function ContributeFormPage() {
   const navigate = useNavigate();
-  const { cultures } = useCultures();
-  const imgRef = useRef();
+  const [cultures, setCultures]       = useState([]);
+  const [loading, setLoading]         = useState(false);
+  const [success, setSuccess]         = useState(false);
+  const [serverError, setServerError] = useState("");
+  const [imagePreview, setImagePreview] = useState(null);
 
   const [form, setForm] = useState({
-    food_name: "", culture_id: "", location: "",
-    festival: "", season: "", taste: "",
-    description: "", cultural_significance: "",
+    foodName: "", foodNameNepali: "", cultureId: "",
+    location: "", description: "", culturalSignificance: "",
+    preparationSummary: "", vegStatus: "veg",
+    taste: [], season: [], festival: [], mealType: [], occasion: [],
+    ingredients: ["", "", ""],
+    image: null,
   });
-  const [imgFile,    setImgFile]    = useState(null);
-  const [imgPreview, setImgPreview] = useState(null);
-  const [errors,     setErrors]     = useState({});
-  const [submitting, setSubmitting] = useState(false);
-  const [success,    setSuccess]    = useState(false);
+  const [errors, setErrors] = useState({});
 
-  const set = (field, val) => {
-    setForm(f => ({ ...f, [field]: val }));
-    if (errors[field]) setErrors(e => ({ ...e, [field]: "" }));
+  useEffect(() => {
+    getCultures()
+      .then(r => setCultures(r.data.data?.cultures || r.data.data || []))
+      .catch(() => {});
+  }, []);
+
+  const set = (field, value) => {
+    setForm(f => ({ ...f, [field]: value }));
+    setErrors(e => ({ ...e, [field]: "" }));
   };
 
-  const handleImg = (e) => {
-    const f = e.target.files[0];
-    if (!f) return;
-    setImgFile(f);
-    setImgPreview(URL.createObjectURL(f));
+  const toggleChip = (field, value) => {
+    setForm(f => ({
+      ...f,
+      [field]: f[field].includes(value)
+        ? f[field].filter(v => v !== value)
+        : [...f[field], value],
+    }));
+  };
+
+  const handleIngredientChange = (idx, val) => {
+    const updated = [...form.ingredients];
+    updated[idx] = val;
+    setForm(f => ({ ...f, ingredients: updated }));
+  };
+  const addIngredient    = () => setForm(f => ({ ...f, ingredients: [...f.ingredients, ""] }));
+  const removeIngredient = (idx) =>
+    setForm(f => ({ ...f, ingredients: f.ingredients.filter((_, i) => i !== idx) }));
+
+  const handleImage = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    set("image", file);
+    setImagePreview(URL.createObjectURL(file));
   };
 
   const validate = () => {
     const e = {};
-    if (!form.food_name.trim())   e.food_name    = "Food name is required.";
-    if (!form.description.trim()) e.description  = "Description is required.";
-    if (form.description.trim().length < 30) e.description = "Please write at least 30 characters.";
+    if (!form.foodName.trim())    e.foodName    = "Food name is required.";
+    if (!form.cultureId)          e.cultureId   = "Please select a culture.";
+    if (!form.description.trim()) e.description = "Description is required.";
+    if (form.description.trim().length < 30)
+      e.description = "Please write at least 30 characters.";
     return e;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const e2 = validate();
-    if (Object.keys(e2).length) { setErrors(e2); return; }
-    setSubmitting(true);
+    const errs = validate();
+    if (Object.keys(errs).length) { setErrors(errs); return; }
+
+    setLoading(true);
+    setServerError("");
+
+    // Build attributes array
+    const attributes = [
+      ...form.taste.map(v => ({ type: "taste", value: v })),
+      ...form.season.map(v => ({ type: "season", value: v })),
+      ...form.festival.map(v => ({ type: "festival", value: v })),
+      ...form.mealType.map(v => ({ type: "meal_type", value: v })),
+      ...form.occasion.map(v => ({ type: "occasion", value: v })),
+    ];
+
+    const cleanIngredients = form.ingredients.filter(i => i.trim());
 
     const fd = new FormData();
-    Object.entries(form).forEach(([k, v]) => { if (v) fd.append(k, v); });
-    if (imgFile) fd.append("image", imgFile);
+    fd.append("foodName",             form.foodName.trim());
+    fd.append("foodNameNepali",       form.foodNameNepali.trim());
+    fd.append("cultureId",            form.cultureId);
+    fd.append("location",             form.location.trim());
+    fd.append("description",          form.description.trim());
+    fd.append("culturalSignificance", form.culturalSignificance.trim());
+    fd.append("preparationSummary",   form.preparationSummary.trim());
+    fd.append("vegStatus",            form.vegStatus);
+    fd.append("attributes",           JSON.stringify(attributes));
+    fd.append("ingredients",          JSON.stringify(cleanIngredients));
+    if (form.image) fd.append("media", form.image);
 
     try {
-      await submitFood(fd);
+      await submitContribution(fd);
       setSuccess(true);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      setTimeout(() => navigate("/homeUser"), 3500);
     } catch (err) {
-      setErrors({ server: err.response?.data?.message || "Submission failed. Please try again." });
+      setServerError(err.response?.data?.message || "Something went wrong. Please try again.");
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
   };
 
   if (success) return (
-    <>
+    <div className="cfp-wrap">
       <UserNavBar />
-      <div className="cform-page">
-        <div className="cform-success">
-          <div className="cform-success-icon">🎉</div>
-          <h2 className="cform-success-title">Thank you for contributing!</h2>
-          <p  className="cform-success-msg">
-            Your food submission is now under review. Our admin team will check it 
-            and once approved it'll appear in the food discovery section.
-          </p>
-          <div className="cform-success-actions">
-            <button className="cform-btn-primary" onClick={() => { setSuccess(false); setForm({ food_name:"",culture_id:"",location:"",festival:"",season:"",taste:"",description:"",cultural_significance:"" }); setImgFile(null); setImgPreview(null); }}>
-              Submit Another
-            </button>
-            <button className="cform-btn-secondary" onClick={() => navigate("/homeUser")}>
-              Go to Community
-            </button>
-          </div>
-        </div>
+      <div className="cfp-success">
+        <div className="cfp-success-icon">✓</div>
+        <h2>Contribution Submitted!</h2>
+        <p>Thank you! Our team will review your submission and you'll be notified once it's approved.</p>
+        <p className="cfp-redirect">Redirecting you home…</p>
       </div>
-    </>
+    </div>
   );
 
   return (
-    <>
+    <div className="cfp-wrap">
       <UserNavBar />
-      <div className="cform-page">
-        <div className="cform-container">
+      <div className="cfp-content">
+        <div className="cfp-header">
+          <h1>Contribute a Food</h1>
+          <p>Share a cultural food with the community. Our team reviews all submissions before publishing.</p>
+        </div>
 
-          {/* Header */}
-          <div className="cform-header">
-            <button className="cform-back" onClick={() => navigate("/contribute")}>← Back</button>
-            <h1 className="cform-title">Contribute a Food</h1>
-            <p className="cform-subtitle">
-              Share a cultural dish from your community. All submissions are reviewed before going live.
-            </p>
-          </div>
+        {serverError && <div className="cfp-server-error">{serverError}</div>}
 
-          <form className="cform-form" onSubmit={handleSubmit} noValidate>
+        <form className="cfp-form" onSubmit={handleSubmit} noValidate>
 
-            {errors.server && <div className="cform-server-error">⚠ {errors.server}</div>}
+          {/* ── Basic Info ── */}
+          <section className="cfp-section">
+            <h3 className="cfp-section-title">Basic Information</h3>
 
-            {/* Food Name */}
-            <div className="cform-field">
-              <label className="cform-label">Food Name <span className="cform-req">*</span></label>
-              <input
-                type="text" className={`cform-input ${errors.food_name ? "error" : ""}`}
-                placeholder="e.g. Yomari, Dhido, Sel Roti"
-                value={form.food_name} onChange={e => set("food_name", e.target.value)}
-              />
-              {errors.food_name && <p className="cform-error">{errors.food_name}</p>}
+            <div className="cfp-row">
+              <div className="cfp-group">
+                <label className="cfp-label">Food Name (English) <span className="cfp-req">*</span></label>
+                <input className={`cfp-input${errors.foodName ? " cfp-err" : ""}`}
+                  value={form.foodName} onChange={e => set("foodName", e.target.value)}
+                  placeholder="e.g. Yomari" />
+                {errors.foodName && <p className="cfp-error">{errors.foodName}</p>}
+              </div>
+              <div className="cfp-group">
+                <label className="cfp-label">Food Name (Nepali)</label>
+                <input className="cfp-input" value={form.foodNameNepali}
+                  onChange={e => set("foodNameNepali", e.target.value)} placeholder="e.g. योमरी" />
+              </div>
             </div>
 
-            {/* Row: Culture + Location */}
-            <div className="cform-row">
-              <div className="cform-field">
-                <label className="cform-label">Culture / Ethnicity</label>
-                <select className="cform-select" value={form.culture_id} onChange={e => set("culture_id", e.target.value)}>
+            <div className="cfp-row">
+              <div className="cfp-group">
+                <label className="cfp-label">Culture / Community <span className="cfp-req">*</span></label>
+                <select className={`cfp-input${errors.cultureId ? " cfp-err" : ""}`}
+                  value={form.cultureId} onChange={e => set("cultureId", e.target.value)}>
                   <option value="">Select culture…</option>
-                  {cultures.map(c => <option key={c.culture_id} value={c.culture_id}>{c.culture_name}</option>)}
+                  {cultures.map(c => (
+                    <option key={c.culture_id} value={c.culture_id}>{c.culture_name}</option>
+                  ))}
                 </select>
+                {errors.cultureId && <p className="cfp-error">{errors.cultureId}</p>}
               </div>
-              <div className="cform-field">
-                <label className="cform-label">Location / Region</label>
-                <input
-                  type="text" className="cform-input"
-                  placeholder="e.g. Kathmandu Valley, Terai"
-                  value={form.location} onChange={e => set("location", e.target.value)}
-                />
+              <div className="cfp-group">
+                <label className="cfp-label">Location / Region</label>
+                <input className="cfp-input" value={form.location}
+                  onChange={e => set("location", e.target.value)} placeholder="e.g. Kathmandu Valley" />
               </div>
             </div>
 
-            {/* Row: Season + Taste */}
-            <div className="cform-row">
-              <div className="cform-field">
-                <label className="cform-label">Season</label>
-                <div className="cform-chip-group">
-                  {SEASONS.map(s => (
-                    <button type="button" key={s}
-                      className={`cform-chip ${form.season === s ? "active" : ""}`}
-                      onClick={() => set("season", form.season === s ? "" : s)}
-                    >{s}</button>
+            <div className="cfp-group">
+              <label className="cfp-label">Diet Type</label>
+              <div className="cfp-radio-row">
+                {["veg","non-veg","vegan"].map(v => (
+                  <label key={v} className={`cfp-radio${form.vegStatus === v ? " active" : ""}`}>
+                    <input type="radio" name="vegStatus" value={v}
+                      checked={form.vegStatus === v} onChange={() => set("vegStatus", v)} />
+                    {v.charAt(0).toUpperCase() + v.slice(1)}
+                  </label>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* ── Descriptions ── */}
+          <section className="cfp-section">
+            <h3 className="cfp-section-title">Descriptions</h3>
+
+            <div className="cfp-group">
+              <label className="cfp-label">Description <span className="cfp-req">*</span></label>
+              <textarea className={`cfp-textarea${errors.description ? " cfp-err" : ""}`}
+                rows={4} value={form.description}
+                onChange={e => set("description", e.target.value)}
+                placeholder="Describe the food — what it is, how it tastes, where it's from…" />
+              {errors.description && <p className="cfp-error">{errors.description}</p>}
+            </div>
+
+            <div className="cfp-group">
+              <label className="cfp-label">Cultural Significance</label>
+              <textarea className="cfp-textarea" rows={3} value={form.culturalSignificance}
+                onChange={e => set("culturalSignificance", e.target.value)}
+                placeholder="What role does this food play in rituals, festivals, or community life?" />
+            </div>
+
+            <div className="cfp-group">
+              <label className="cfp-label">How It's Made (brief)</label>
+              <textarea className="cfp-textarea" rows={3} value={form.preparationSummary}
+                onChange={e => set("preparationSummary", e.target.value)}
+                placeholder="Brief preparation steps or cooking method…" />
+            </div>
+          </section>
+
+          {/* ── Attributes ── */}
+          <section className="cfp-section">
+            <h3 className="cfp-section-title">Attributes <span className="cfp-hint">(select all that apply)</span></h3>
+
+            {[
+              { label: "Taste",     field: "taste",    options: TASTES },
+              { label: "Season",    field: "season",   options: SEASONS },
+              { label: "Festival",  field: "festival", options: FESTIVALS },
+              { label: "Meal Type", field: "mealType", options: MEAL_TYPES },
+              { label: "Occasion",  field: "occasion", options: OCCASIONS },
+            ].map(({ label, field, options }) => (
+              <div className="cfp-group" key={field}>
+                <label className="cfp-label">{label}</label>
+                <div className="cfp-chips">
+                  {options.map(opt => (
+                    <button type="button" key={opt}
+                      className={`cfp-chip${form[field].includes(opt) ? " selected" : ""}`}
+                      onClick={() => toggleChip(field, opt)}>{opt}</button>
                   ))}
                 </div>
               </div>
-              <div className="cform-field">
-                <label className="cform-label">Taste Profile</label>
-                <div className="cform-chip-group">
-                  {TASTES.map(t => (
-                    <button type="button" key={t}
-                      className={`cform-chip ${form.taste === t ? "active" : ""}`}
-                      onClick={() => set("taste", form.taste === t ? "" : t)}
-                    >{t}</button>
-                  ))}
+            ))}
+          </section>
+
+          {/* ── Ingredients ── */}
+          <section className="cfp-section">
+            <h3 className="cfp-section-title">Ingredients</h3>
+            <div className="cfp-ingredients">
+              {form.ingredients.map((ing, idx) => (
+                <div className="cfp-ing-row" key={idx}>
+                  <input className="cfp-input" value={ing}
+                    onChange={e => handleIngredientChange(idx, e.target.value)}
+                    placeholder={`Ingredient ${idx + 1}`} />
+                  {form.ingredients.length > 1 && (
+                    <button type="button" className="cfp-ing-remove"
+                      onClick={() => removeIngredient(idx)}>✕</button>
+                  )}
                 </div>
-              </div>
-            </div>
-
-            {/* Festival */}
-            <div className="cform-field">
-              <label className="cform-label">Associated Festival / Occasion</label>
-              <input
-                type="text" className="cform-input"
-                placeholder="e.g. Dashain, Tihar, Chhath, Indra Jatra"
-                value={form.festival} onChange={e => set("festival", e.target.value)}
-              />
-            </div>
-
-            {/* Description */}
-            <div className="cform-field">
-              <label className="cform-label">Description <span className="cform-req">*</span></label>
-              <textarea
-                className={`cform-textarea ${errors.description ? "error" : ""}`}
-                rows={5}
-                placeholder="Describe the food — what it's made of, how it's prepared, what it tastes like, and why it's significant…"
-                value={form.description} onChange={e => set("description", e.target.value)}
-              />
-              <span className="cform-char-count">{form.description.length} chars</span>
-              {errors.description && <p className="cform-error">{errors.description}</p>}
-            </div>
-
-            {/* Cultural significance */}
-            <div className="cform-field">
-              <label className="cform-label">Cultural Significance</label>
-              <textarea
-                className="cform-textarea"
-                rows={3}
-                placeholder="What does this food mean culturally? Is it tied to rituals, identity, or history?"
-                value={form.cultural_significance}
-                onChange={e => set("cultural_significance", e.target.value)}
-              />
-            </div>
-
-            {/* Image upload */}
-            <div className="cform-field">
-              <label className="cform-label">Photo (optional)</label>
-              <div
-                className={`cform-img-drop ${imgPreview ? "has-img" : ""}`}
-                onClick={() => imgRef.current?.click()}
-              >
-                {imgPreview ? (
-                  <img src={imgPreview} alt="preview" className="cform-img-preview" />
-                ) : (
-                  <div className="cform-img-placeholder">
-                    <span className="cform-img-icon">📸</span>
-                    <p className="cform-img-text">Click to upload a photo</p>
-                    <p className="cform-img-hint">JPG, PNG or WebP — max 10 MB</p>
-                  </div>
-                )}
-              </div>
-              {imgPreview && (
-                <button type="button" className="cform-img-remove"
-                  onClick={() => { setImgFile(null); setImgPreview(null); }}>
-                  Remove photo
-                </button>
-              )}
-              <input ref={imgRef} type="file" accept="image/*" style={{ display:"none" }} onChange={handleImg} />
-            </div>
-
-            {/* Submit */}
-            <div className="cform-footer">
-              <p className="cform-footer-note">
-                ✓ Submissions are reviewed by our admin team before going live.
-              </p>
-              <button type="submit" className="cform-submit" disabled={submitting}>
-                {submitting ? (
-                  <><span className="cform-spinner" /> Submitting…</>
-                ) : (
-                  <><span>✦</span> Submit Food</>
-                )}
+              ))}
+              <button type="button" className="cfp-ing-add" onClick={addIngredient}>
+                + Add ingredient
               </button>
             </div>
+          </section>
 
-          </form>
-        </div>
+          {/* ── Image ── */}
+          <section className="cfp-section">
+            <h3 className="cfp-section-title">Food Image</h3>
+            <div className="cfp-upload-area" onClick={() => document.getElementById("cfp-img").click()}>
+              {imagePreview
+                ? <img src={imagePreview} alt="preview" className="cfp-img-preview" />
+                : <div className="cfp-upload-placeholder">
+                    <span className="cfp-upload-icon">📷</span>
+                    <p>Click to upload an image</p>
+                    <p className="cfp-upload-hint">JPG, PNG, WEBP — max 5 MB</p>
+                  </div>
+              }
+            </div>
+            <input id="cfp-img" type="file" accept="image/*" style={{ display:"none" }}
+              onChange={handleImage} />
+          </section>
+
+          <button type="submit" className="cfp-submit" disabled={loading}>
+            {loading ? "Submitting…" : "Submit Contribution"}
+          </button>
+
+        </form>
       </div>
-    </>
+    </div>
   );
 }

@@ -18,10 +18,10 @@ export default function AdminLoginPage() {
       const res = await adminLogin(email.trim(), password);
       const { token, user } = res.data.data;
       localStorage.setItem("adminToken", token);
-      localStorage.setItem("adminUser",  JSON.stringify(user));
+      localStorage.setItem("admin", JSON.stringify(user)); // ← was "adminUser", must be "admin"
       navigate("/admin/dashboard");
     } catch (err) {
-      setError(err.response?.data?.message || "Login failed.");
+      setError(err.response?.data?.message || "Invalid admin credentials.");
     } finally {
       setLoading(false);
     }

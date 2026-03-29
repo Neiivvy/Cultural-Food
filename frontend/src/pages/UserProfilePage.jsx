@@ -5,34 +5,43 @@ import { getFeed }                       from "../api/postService";
 import { getQuestions }                  from "../api/questionService";
 import { getNotifications, markAllRead } from "../api/notificationService";
 import { getAvatar }                     from "../utils/avatar";
+import { getMyContributions }            from "../api/contributionService";
 import "./UserProfilePage.css";
 
 const TABS = [
-  { id: "recipes",       label: "My Recipes",   icon: "📖" },
-  { id: "reels",         label: "My Reels",      icon: "▶"  },
-  { id: "questions",     label: "My Questions",  icon: "❓" },
-  { id: "answers",       label: "My Answers",    icon: "💬" },
-  { id: "notifications", label: "Notifications", icon: "🔔" },
+  { id: "recipes",       label: "My Recipes",       icon: "📖" },
+  { id: "reels",         label: "My Reels",          icon: "▶"  },
+  { id: "questions",     label: "My Questions",      icon: "❓" },
+  { id: "answers",       label: "My Answers",        icon: "💬" },
+  { id: "contributions", label: "My Contributions",  icon: "🍽"  },
+  { id: "notifications", label: "Notifications",     icon: "🔔" },
 ];
 
-const NOTIF_ICONS = { like: "❤️", comment: "💬", answer: "💡" };
+const NOTIF_ICONS = {
+  like:                     "❤️",
+  comment:                  "💬",
+  answer:                   "💡",
+  contribution_approved:    "✓",
+  contribution_rejected:    "✕",
+};
 
 export default function UserProfilePage() {
   const navigate = useNavigate();
-  const [user,        setUser]        = useState(null);
-  const [myPosts,     setMyPosts]     = useState([]);
-  const [myQs,        setMyQs]        = useState([]);
-  const [myAnswers,   setMyAnswers]   = useState([]);
-  const [notifs,      setNotifs]      = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [activeTab,   setActiveTab]   = useState("recipes");
-  const [editing,     setEditing]     = useState(false);
-  const [editName,    setEditName]    = useState("");
-  const [editBio,     setEditBio]     = useState("");
-  const [picFile,     setPicFile]     = useState(null);
-  const [picPreview,  setPicPreview]  = useState(null);
-  const [saving,      setSaving]      = useState(false);
-  const [loading,     setLoading]     = useState(true);
+  const [user,          setUser]          = useState(null);
+  const [myPosts,       setMyPosts]       = useState([]);
+  const [myQs,          setMyQs]          = useState([]);
+  const [myAnswers,     setMyAnswers]     = useState([]);
+  const [notifs,        setNotifs]        = useState([]);
+  const [unreadCount,   setUnreadCount]   = useState(0);
+  const [contributions, setContributions] = useState([]);
+  const [activeTab,     setActiveTab]     = useState("recipes");
+  const [editing,       setEditing]       = useState(false);
+  const [editName,      setEditName]      = useState("");
+  const [editBio,       setEditBio]       = useState("");
+  const [picFile,       setPicFile]       = useState(null);
+  const [picPreview,    setPicPreview]    = useState(null);
+  const [saving,        setSaving]        = useState(false);
+  const [loading,       setLoading]       = useState(true);
 
   const stored = JSON.parse(localStorage.getItem("user") || "{}");
 
@@ -42,7 +51,7 @@ export default function UserProfilePage() {
         const [profileRes, myPostsRes, allQsRes, notifRes] = await Promise.all([
           getProfile(stored.user_id),
           getFeed({ user_id: stored.user_id, limit: 100 }),
-          getQuestions(),   // ALL questions — needed to find my answers on others' questions
+          getQuestions(),
           getNotifications(),
         ]);
 
@@ -54,11 +63,8 @@ export default function UserProfilePage() {
         setMyPosts(myPostsRes.data.data.posts || []);
 
         const allQs = allQsRes.data.data.questions || [];
-
-        // My questions = ones I posted
         setMyQs(allQs.filter(q => Number(q.user_id) === Number(stored.user_id)));
 
-        // My answers = answers I wrote on ANY question (not just mine)
         const answers = [];
         allQs.forEach(q => {
           (q.answers || []).forEach(a => {
@@ -78,6 +84,10 @@ export default function UserProfilePage() {
       }
     };
     load();
+
+    getMyContributions()
+      .then(r => setContributions(r.data.data?.contributions || []))
+      .catch(() => {});
   }, [stored.user_id]);
 
   const handlePicChange = (e) => {
@@ -101,7 +111,6 @@ export default function UserProfilePage() {
       setUser(updated);
       const merged = { ...stored, ...updated };
       localStorage.setItem("user", JSON.stringify(merged));
-      // Tell navbar to re-read the updated user (including new profile_picture)
       window.dispatchEvent(new CustomEvent('profile-updated', { detail: merged }));
       setEditing(false); setPicFile(null); setPicPreview(null);
     } catch { /* ignore */ }
@@ -115,6 +124,7 @@ export default function UserProfilePage() {
         await markAllRead();
         setUnreadCount(0);
         setNotifs(prev => prev.map(n => ({ ...n, is_read: 1 })));
+        window.dispatchEvent(new Event('notif-cleared'));
       } catch { /* ignore */ }
     }
   };
@@ -141,7 +151,6 @@ export default function UserProfilePage() {
           : (
             <div className="uprofile-qlist">
               {myQs.map(q => (
-                // Clicking navigates to questions page — questions live there
                 <div
                   key={q.question_id}
                   className="uprofile-qitem uprofile-qitem-click"
@@ -178,6 +187,71 @@ export default function UserProfilePage() {
             </div>
           );
 
+      case "contributions":
+        return (
+          <div className="uprof-contributions">
+            {contributions.length === 0 ? (
+              <div className="uprofile-empty">
+                <p>You haven't submitted any food contributions yet.</p>
+                <a href="/contribute" className="uprof-contrib-link">Contribute a food →</a>
+              </div>
+            ) : (
+              contributions.map(c => (
+                <div
+                  key={c.contribution_id}
+                  className={`uprof-contrib-card uprof-contrib-${c.status}`}
+                >
+                  {c.image_url && (
+                    <img src={c.image_url} alt={c.food_name} className="uprof-contrib-img" />
+                  )}
+                  <div className="uprof-contrib-body">
+                    <div className="uprof-contrib-name">
+                      {c.food_name}
+                      {c.food_name_nepali && (
+                        <span className="uprof-contrib-nepali"> · {c.food_name_nepali}</span>
+                      )}
+                    </div>
+                    <div className="uprof-contrib-meta">
+                      {c.culture_name && (
+                        <span className="uprof-contrib-chip">{c.culture_name}</span>
+                      )}
+                      <span className={`uprof-contrib-status uprof-status-${c.status}`}>
+                        {c.status === 'pending'  && '⏳ Pending Review'}
+                        {c.status === 'approved' && '✓ Approved & Live'}
+                        {c.status === 'rejected' && '✕ Not Approved'}
+                      </span>
+                    </div>
+
+                    {/* Admin message — shown for approved and rejected */}
+                    {c.admin_message && (
+                      <div className={`uprof-contrib-msg uprof-msg-${c.status}`}>
+                        <span className="uprof-contrib-msg-label">
+                          {c.status === 'approved' ? '✓ Admin:' : '⚠ Reason:'}
+                        </span>
+                        {' '}{c.admin_message}
+                      </div>
+                    )}
+
+                    <div className="uprof-contrib-date">
+                      Submitted{' '}
+                      {new Date(c.created_at).toLocaleDateString('en-US', {
+                        year: 'numeric', month: 'short', day: 'numeric'
+                      })}
+                      {c.reviewed_at && (
+                        <> · Reviewed{' '}
+                          {new Date(c.reviewed_at).toLocaleDateString('en-US', {
+                            year: 'numeric', month: 'short', day: 'numeric'
+                          })}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        );
+
       case "notifications":
         return notifs.length === 0
           ? <p className="uprofile-empty">No notifications yet.</p>
@@ -188,18 +262,32 @@ export default function UserProfilePage() {
                   key={n.notification_id}
                   className={`uprofile-notif-item ${!n.is_read ? "unread" : ""} uprofile-qitem-click`}
                   onClick={() => {
-                    if (n.post_id)     navigate(`/post/${n.post_id}`);
-                    else if (n.question_id) navigate("/questions");
+                    if (n.type === 'contribution_approved' || n.type === 'contribution_rejected') {
+                      setActiveTab('contributions');
+                    } else if (n.post_id) {
+                      navigate(`/post/${n.post_id}`);
+                    } else if (n.question_id) {
+                      navigate("/questions");
+                    }
                   }}
                 >
-                  <div className="uprofile-notif-icon">{NOTIF_ICONS[n.type] || "🔔"}</div>
+                  <div className={`uprofile-notif-icon uprof-notif-icon-${n.type}`}>
+                    {NOTIF_ICONS[n.type] || "🔔"}
+                  </div>
                   <div className="uprofile-notif-body">
                     <div className="uprofile-notif-actor">
-                      <img src={getAvatar(n.actor_pic, n.actor_name, 28)} alt={n.actor_name} className="uprofile-notif-avatar" />
+                      <img
+                        src={getAvatar(n.actor_pic, n.actor_name, 28)}
+                        alt={n.actor_name}
+                        className="uprofile-notif-avatar"
+                      />
                       <span className="uprofile-notif-msg">{n.message}</span>
                     </div>
                     <span className="uprofile-notif-time">
-                      {new Date(n.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                      {new Date(n.created_at).toLocaleDateString("en-US", {
+                        month: "short", day: "numeric",
+                        hour: "2-digit", minute: "2-digit"
+                      })}
                     </span>
                   </div>
                   {!n.is_read && <div className="uprofile-notif-dot" />}
@@ -221,7 +309,10 @@ export default function UserProfilePage() {
             <img src={avatarSrc} alt="avatar" className="uprofile-avatar" />
             {editing && (
               <label className="uprofile-avatar-edit" title="Change photo">
-                <img src="https://api.iconify.design/material-symbols/edit-outline.svg?color=%23fff" alt="edit" width="14" height="14" />
+                <img
+                  src="https://api.iconify.design/material-symbols/edit-outline.svg?color=%23fff"
+                  alt="edit" width="14" height="14"
+                />
                 <input type="file" accept="image/*" onChange={handlePicChange} style={{ display: "none" }} />
               </label>
             )}
@@ -230,33 +321,81 @@ export default function UserProfilePage() {
           <div className="uprofile-info">
             <div className="uprofile-name-row">
               {editing
-                ? <input className="uprofile-name-input" value={editName} onChange={e => setEditName(e.target.value)} />
+                ? <input
+                    className="uprofile-name-input"
+                    value={editName}
+                    onChange={e => setEditName(e.target.value)}
+                  />
                 : <h2 className="uprofile-name">{user.name}</h2>
               }
               {editing ? (
                 <div className="uprofile-edit-actions">
-                  <button className="uprofile-save-btn" onClick={saveProfile} disabled={saving}>{saving ? "Saving…" : "Save"}</button>
-                  <button className="uprofile-cancel-btn" onClick={() => { setEditing(false); setEditName(user.name); setEditBio(user.bio || ""); setPicPreview(null); setPicFile(null); }}>Cancel</button>
+                  <button
+                    className="uprofile-save-btn"
+                    onClick={saveProfile}
+                    disabled={saving}
+                  >
+                    {saving ? "Saving…" : "Save"}
+                  </button>
+                  <button
+                    className="uprofile-cancel-btn"
+                    onClick={() => {
+                      setEditing(false);
+                      setEditName(user.name);
+                      setEditBio(user.bio || "");
+                      setPicPreview(null);
+                      setPicFile(null);
+                    }}
+                  >
+                    Cancel
+                  </button>
                 </div>
-              ) : null}
+              ) : (
+                <button className="uprofile-edit-btn" onClick={() => setEditing(true)}>
+                  ✎ Edit Profile
+                </button>
+              )}
             </div>
 
             <p className="uprofile-email">
-              <img src="https://api.iconify.design/material-symbols/mail-outline.svg?color=%239ca3af" alt="" width="14" height="14" />
+              <img
+                src="https://api.iconify.design/material-symbols/mail-outline.svg?color=%239ca3af"
+                alt="" width="14" height="14"
+              />
               {user.email}
             </p>
 
             {editing
-              ? <textarea className="uprofile-bio-edit" value={editBio} onChange={e => setEditBio(e.target.value)} rows={3} placeholder="Write something about yourself…" />
+              ? <textarea
+                  className="uprofile-bio-edit"
+                  value={editBio}
+                  onChange={e => setEditBio(e.target.value)}
+                  rows={3}
+                  placeholder="Write something about yourself…"
+                />
               : <p className="uprofile-bio">{user.bio || "No bio yet."}</p>
             }
 
             <div className="uprofile-stats">
-              <div className="uprofile-stat"><span className="uprofile-stat-n">{myPosts.length}</span><span className="uprofile-stat-l">Posts</span></div>
+              <div className="uprofile-stat">
+                <span className="uprofile-stat-n">{myPosts.length}</span>
+                <span className="uprofile-stat-l">Posts</span>
+              </div>
               <div className="uprofile-stat-div" />
-              <div className="uprofile-stat"><span className="uprofile-stat-n">{myQs.length}</span><span className="uprofile-stat-l">Questions</span></div>
+              <div className="uprofile-stat">
+                <span className="uprofile-stat-n">{myQs.length}</span>
+                <span className="uprofile-stat-l">Questions</span>
+              </div>
               <div className="uprofile-stat-div" />
-              <div className="uprofile-stat"><span className="uprofile-stat-n">{myAnswers.length}</span><span className="uprofile-stat-l">Answers</span></div>
+              <div className="uprofile-stat">
+                <span className="uprofile-stat-n">{myAnswers.length}</span>
+                <span className="uprofile-stat-l">Answers</span>
+              </div>
+              <div className="uprofile-stat-div" />
+              <div className="uprofile-stat">
+                <span className="uprofile-stat-n">{contributions.length}</span>
+                <span className="uprofile-stat-l">Contributions</span>
+              </div>
             </div>
           </div>
         </div>
@@ -272,7 +411,9 @@ export default function UserProfilePage() {
               <span>{t.icon}</span>
               <span>{t.label}</span>
               {t.id === "notifications" && unreadCount > 0 && (
-                <span className="uprofile-notif-badge">{unreadCount > 9 ? "9+" : unreadCount}</span>
+                <span className="uprofile-notif-badge">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
               )}
             </button>
           ))}
@@ -289,7 +430,6 @@ function PostGrid({ posts, emptyMsg = "Nothing here yet." }) {
   return (
     <div className="uprofile-grid">
       {posts.map(p => (
-        // Each post links to its full detail page with comments
         <Link to={`/post/${p.post_id}`} key={p.post_id} className="uprofile-grid-item">
           {p.media_url
             ? <img src={p.media_url} alt={p.title} />
