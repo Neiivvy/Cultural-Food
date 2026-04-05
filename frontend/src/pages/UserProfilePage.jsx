@@ -1,29 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { getProfile, updateProfile }    from "../api/userService";
 import { getFeed }                       from "../api/postService";
 import { getQuestions }                  from "../api/questionService";
-import { getNotifications, markAllRead } from "../api/notificationService";
 import { getAvatar }                     from "../utils/avatar";
 import { getMyContributions }            from "../api/contributionService";
+import PostCard                          from "../components/PostCard";
 import "./UserProfilePage.css";
 
 const TABS = [
-  { id: "recipes",       label: "My Recipes",       icon: "📖" },
-  { id: "reels",         label: "My Reels",          icon: "▶"  },
-  { id: "questions",     label: "My Questions",      icon: "❓" },
-  { id: "answers",       label: "My Answers",        icon: "💬" },
-  { id: "contributions", label: "My Contributions",  icon: "🍽"  },
-  { id: "notifications", label: "Notifications",     icon: "🔔" },
+  { id: "recipes",       label: "My Recipes",      icon: "📖" },
+  { id: "reels",         label: "My Reels",         icon: "▶"  },
+  { id: "questions",     label: "My Questions",     icon: "❓" },
+  { id: "answers",       label: "My Answers",       icon: "💬" },
+  { id: "contributions", label: "My Contributions", icon: "🍽"  },
 ];
-
-const NOTIF_ICONS = {
-  like:                     "❤️",
-  comment:                  "💬",
-  answer:                   "💡",
-  contribution_approved:    "✓",
-  contribution_rejected:    "✕",
-};
 
 export default function UserProfilePage() {
   const navigate = useNavigate();
@@ -31,8 +22,6 @@ export default function UserProfilePage() {
   const [myPosts,       setMyPosts]       = useState([]);
   const [myQs,          setMyQs]          = useState([]);
   const [myAnswers,     setMyAnswers]     = useState([]);
-  const [notifs,        setNotifs]        = useState([]);
-  const [unreadCount,   setUnreadCount]   = useState(0);
   const [contributions, setContributions] = useState([]);
   const [activeTab,     setActiveTab]     = useState("recipes");
   const [editing,       setEditing]       = useState(false);
@@ -48,18 +37,16 @@ export default function UserProfilePage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const [profileRes, myPostsRes, allQsRes, notifRes] = await Promise.all([
+        const [profileRes, myPostsRes, allQsRes] = await Promise.all([
           getProfile(stored.user_id),
           getFeed({ user_id: stored.user_id, limit: 100 }),
           getQuestions(),
-          getNotifications(),
         ]);
 
         const u = profileRes.data.data.user;
         setUser(u);
         setEditName(u.name);
         setEditBio(u.bio || "");
-
         setMyPosts(myPostsRes.data.data.posts || []);
 
         const allQs = allQsRes.data.data.questions || [];
@@ -74,9 +61,6 @@ export default function UserProfilePage() {
           });
         });
         setMyAnswers(answers.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
-
-        setNotifs(notifRes.data.data.notifications || []);
-        setUnreadCount(notifRes.data.data.unreadCount || 0);
       } catch (e) {
         console.error("Profile load error:", e);
       } finally {
@@ -95,7 +79,7 @@ export default function UserProfilePage() {
     if (!file) return;
     setPicFile(file);
     const reader = new FileReader();
-    reader.onload = ev => setPicPreview(ev.target.result);
+    reader.onload  = ev => setPicPreview(ev.target.result);
     reader.readAsDataURL(file);
   };
 
@@ -111,22 +95,10 @@ export default function UserProfilePage() {
       setUser(updated);
       const merged = { ...stored, ...updated };
       localStorage.setItem("user", JSON.stringify(merged));
-      window.dispatchEvent(new CustomEvent('profile-updated', { detail: merged }));
+      window.dispatchEvent(new CustomEvent("profile-updated", { detail: merged }));
       setEditing(false); setPicFile(null); setPicPreview(null);
     } catch { /* ignore */ }
     finally { setSaving(false); }
-  };
-
-  const openNotifications = async () => {
-    setActiveTab("notifications");
-    if (unreadCount > 0) {
-      try {
-        await markAllRead();
-        setUnreadCount(0);
-        setNotifs(prev => prev.map(n => ({ ...n, is_read: 1 })));
-        window.dispatchEvent(new Event('notif-cleared'));
-      } catch { /* ignore */ }
-    }
   };
 
   if (loading) return <div className="uprofile-page"><p className="uprofile-loading">Loading…</p></div>;
@@ -138,12 +110,15 @@ export default function UserProfilePage() {
 
   const renderTab = () => {
     switch (activeTab) {
-
       case "recipes":
-        return <PostGrid posts={myRecipes} emptyMsg="No recipes posted yet." />;
+        return myRecipes.length === 0
+          ? <p className="uprofile-empty">No recipes posted yet.</p>
+          : <div className="uprofile-feed">{myRecipes.map(p => <PostCard key={p.post_id} post={p} />)}</div>;
 
       case "reels":
-        return <PostGrid posts={myReels} emptyMsg="No reels posted yet." />;
+        return myReels.length === 0
+          ? <p className="uprofile-empty">No reels posted yet.</p>
+          : <div className="uprofile-feed">{myReels.map(p => <PostCard key={p.post_id} post={p} />)}</div>;
 
       case "questions":
         return myQs.length === 0
@@ -153,7 +128,7 @@ export default function UserProfilePage() {
               {myQs.map(q => (
                 <div
                   key={q.question_id}
-                  className="uprofile-qitem uprofile-qitem-click"
+                  className="uprofile-qitem"
                   onClick={() => navigate("/questions")}
                 >
                   <h4 className="uprofile-qtitle">{q.title}</h4>
@@ -176,7 +151,7 @@ export default function UserProfilePage() {
               {myAnswers.map(a => (
                 <div
                   key={a.answer_id}
-                  className="uprofile-qitem uprofile-qitem-click"
+                  className="uprofile-qitem"
                   onClick={() => navigate("/questions")}
                 >
                   <p className="uprofile-ans-q">Re: <em>{a.questionTitle}</em></p>
@@ -197,10 +172,7 @@ export default function UserProfilePage() {
               </div>
             ) : (
               contributions.map(c => (
-                <div
-                  key={c.contribution_id}
-                  className={`uprof-contrib-card uprof-contrib-${c.status}`}
-                >
+                <div key={c.contribution_id} className={`uprof-contrib-card uprof-contrib-${c.status}`}>
                   {c.image_url && (
                     <img src={c.image_url} alt={c.food_name} className="uprof-contrib-img" />
                   )}
@@ -216,31 +188,28 @@ export default function UserProfilePage() {
                         <span className="uprof-contrib-chip">{c.culture_name}</span>
                       )}
                       <span className={`uprof-contrib-status uprof-status-${c.status}`}>
-                        {c.status === 'pending'  && '⏳ Pending Review'}
-                        {c.status === 'approved' && '✓ Approved & Live'}
-                        {c.status === 'rejected' && '✕ Not Approved'}
+                        {c.status === "pending"  && "⏳ Pending Review"}
+                        {c.status === "approved" && "✓ Approved & Live"}
+                        {c.status === "rejected" && "✕ Not Approved"}
                       </span>
                     </div>
-
-                    {/* Admin message — shown for approved and rejected */}
                     {c.admin_message && (
                       <div className={`uprof-contrib-msg uprof-msg-${c.status}`}>
                         <span className="uprof-contrib-msg-label">
-                          {c.status === 'approved' ? '✓ Admin:' : '⚠ Reason:'}
-                        </span>
-                        {' '}{c.admin_message}
+                          {c.status === "approved" ? "✓ Admin:" : "⚠ Reason:"}
+                        </span>{" "}
+                        {c.admin_message}
                       </div>
                     )}
-
                     <div className="uprof-contrib-date">
-                      Submitted{' '}
-                      {new Date(c.created_at).toLocaleDateString('en-US', {
-                        year: 'numeric', month: 'short', day: 'numeric'
+                      Submitted{" "}
+                      {new Date(c.created_at).toLocaleDateString("en-US", {
+                        year: "numeric", month: "short", day: "numeric",
                       })}
                       {c.reviewed_at && (
-                        <> · Reviewed{' '}
-                          {new Date(c.reviewed_at).toLocaleDateString('en-US', {
-                            year: 'numeric', month: 'short', day: 'numeric'
+                        <> · Reviewed{" "}
+                          {new Date(c.reviewed_at).toLocaleDateString("en-US", {
+                            year: "numeric", month: "short", day: "numeric",
                           })}
                         </>
                       )}
@@ -252,50 +221,6 @@ export default function UserProfilePage() {
           </div>
         );
 
-      case "notifications":
-        return notifs.length === 0
-          ? <p className="uprofile-empty">No notifications yet.</p>
-          : (
-            <div className="uprofile-notif-list">
-              {notifs.map(n => (
-                <div
-                  key={n.notification_id}
-                  className={`uprofile-notif-item ${!n.is_read ? "unread" : ""} uprofile-qitem-click`}
-                  onClick={() => {
-                    if (n.type === 'contribution_approved' || n.type === 'contribution_rejected') {
-                      setActiveTab('contributions');
-                    } else if (n.post_id) {
-                      navigate(`/post/${n.post_id}`);
-                    } else if (n.question_id) {
-                      navigate("/questions");
-                    }
-                  }}
-                >
-                  <div className={`uprofile-notif-icon uprof-notif-icon-${n.type}`}>
-                    {NOTIF_ICONS[n.type] || "🔔"}
-                  </div>
-                  <div className="uprofile-notif-body">
-                    <div className="uprofile-notif-actor">
-                      <img
-                        src={getAvatar(n.actor_pic, n.actor_name, 28)}
-                        alt={n.actor_name}
-                        className="uprofile-notif-avatar"
-                      />
-                      <span className="uprofile-notif-msg">{n.message}</span>
-                    </div>
-                    <span className="uprofile-notif-time">
-                      {new Date(n.created_at).toLocaleDateString("en-US", {
-                        month: "short", day: "numeric",
-                        hour: "2-digit", minute: "2-digit"
-                      })}
-                    </span>
-                  </div>
-                  {!n.is_read && <div className="uprofile-notif-dot" />}
-                </div>
-              ))}
-            </div>
-          );
-
       default: return null;
     }
   };
@@ -304,15 +229,13 @@ export default function UserProfilePage() {
     <div className="uprofile-page">
       <div className="uprofile-container">
 
+        {/* Profile header */}
         <div className="uprofile-header">
           <div className="uprofile-avatar-wrap">
             <img src={avatarSrc} alt="avatar" className="uprofile-avatar" />
             {editing && (
               <label className="uprofile-avatar-edit" title="Change photo">
-                <img
-                  src="https://api.iconify.design/material-symbols/edit-outline.svg?color=%23fff"
-                  alt="edit" width="14" height="14"
-                />
+                ✎
                 <input type="file" accept="image/*" onChange={handlePicChange} style={{ display: "none" }} />
               </label>
             )}
@@ -321,49 +244,25 @@ export default function UserProfilePage() {
           <div className="uprofile-info">
             <div className="uprofile-name-row">
               {editing
-                ? <input
-                    className="uprofile-name-input"
-                    value={editName}
-                    onChange={e => setEditName(e.target.value)}
-                  />
+                ? <input className="uprofile-name-input" value={editName} onChange={e => setEditName(e.target.value)} />
                 : <h2 className="uprofile-name">{user.name}</h2>
               }
               {editing ? (
                 <div className="uprofile-edit-actions">
-                  <button
-                    className="uprofile-save-btn"
-                    onClick={saveProfile}
-                    disabled={saving}
-                  >
+                  <button className="uprofile-save-btn" onClick={saveProfile} disabled={saving}>
                     {saving ? "Saving…" : "Save"}
                   </button>
-                  <button
-                    className="uprofile-cancel-btn"
-                    onClick={() => {
-                      setEditing(false);
-                      setEditName(user.name);
-                      setEditBio(user.bio || "");
-                      setPicPreview(null);
-                      setPicFile(null);
-                    }}
-                  >
-                    Cancel
-                  </button>
+                  <button className="uprofile-cancel-btn" onClick={() => {
+                    setEditing(false); setEditName(user.name);
+                    setEditBio(user.bio || ""); setPicPreview(null); setPicFile(null);
+                  }}>Cancel</button>
                 </div>
               ) : (
-                <button className="uprofile-edit-btn" onClick={() => setEditing(true)}>
-                  ✎ Edit Profile
-                </button>
+                <button className="uprofile-edit-btn" onClick={() => setEditing(true)}>✎ Edit Profile</button>
               )}
             </div>
 
-            <p className="uprofile-email">
-              <img
-                src="https://api.iconify.design/material-symbols/mail-outline.svg?color=%239ca3af"
-                alt="" width="14" height="14"
-              />
-              {user.email}
-            </p>
+            <p className="uprofile-email">{user.email}</p>
 
             {editing
               ? <textarea
@@ -406,42 +305,16 @@ export default function UserProfilePage() {
             <button
               key={t.id}
               className={`uprofile-tab ${activeTab === t.id ? "active" : ""}`}
-              onClick={t.id === "notifications" ? openNotifications : () => setActiveTab(t.id)}
+              onClick={() => setActiveTab(t.id)}
             >
               <span>{t.icon}</span>
               <span>{t.label}</span>
-              {t.id === "notifications" && unreadCount > 0 && (
-                <span className="uprofile-notif-badge">
-                  {unreadCount > 9 ? "9+" : unreadCount}
-                </span>
-              )}
             </button>
           ))}
         </div>
 
         <div className="uprofile-content">{renderTab()}</div>
       </div>
-    </div>
-  );
-}
-
-function PostGrid({ posts, emptyMsg = "Nothing here yet." }) {
-  if (posts.length === 0) return <p className="uprofile-empty">{emptyMsg}</p>;
-  return (
-    <div className="uprofile-grid">
-      {posts.map(p => (
-        <Link to={`/post/${p.post_id}`} key={p.post_id} className="uprofile-grid-item">
-          {p.media_url
-            ? <img src={p.media_url} alt={p.title} />
-            : <div className="uprofile-grid-placeholder">📖</div>
-          }
-          <div className="uprofile-grid-overlay">
-            <span>❤ {p.likes_count}</span>
-            <span>💬 {p.comments_count}</span>
-          </div>
-          {p.post_type === "reel" && <span className="ugrid-reel">▶</span>}
-        </Link>
-      ))}
     </div>
   );
 }

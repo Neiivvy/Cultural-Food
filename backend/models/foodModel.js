@@ -98,19 +98,26 @@ const Food = {
   },
 
   // ── Single food with all attributes ───────────────────────────
+ // ONLY getById changes — replace this function in your foodModel.js
+
   getById: async (foodId) => {
     const [[food]] = await db.execute(
-      `SELECT f.*, c.culture_name, cc.category_slug, cc.category_name
+      `SELECT f.*,
+              c.culture_name,
+              cc.category_slug, cc.category_name,
+              u.name            AS contributor_name,
+              u.profile_picture AS contributor_picture,
+              u.user_id         AS contributor_id
        FROM foods f
-       LEFT JOIN cultures c ON f.culture_id = c.culture_id
+       LEFT JOIN cultures          c  ON f.culture_id  = c.culture_id
        LEFT JOIN culture_categories cc ON c.category_id = cc.category_id
+       LEFT JOIN users              u  ON f.submitted_by = u.user_id
        WHERE f.food_id = ? AND f.status = 'approved'
        LIMIT 1`,
       [foodId]
     );
     if (!food) return null;
 
-    // Fetch attributes, ingredients, tags
     const [attrs] = await db.execute(
       `SELECT attribute_type, attribute_value FROM food_attributes WHERE food_id = ?`,
       [foodId]

@@ -4,9 +4,9 @@ import PublicNavBar from "../components/NavBar";
 import "./ContributePage.css";
 
 const WHY_CARDS = [
-  { icon: "🏔️", title: "Preserve Heritage", desc: "Many traditional foods are disappearing. Documenting them keeps culture alive for future generations." },
-  { icon: "🤝", title: "Share Knowledge",    desc: "You may know a dish that no one else has documented. Your submission could be someone's discovery." },
-  { icon: "🌍", title: "Build a Resource",   desc: "Together we're building Nepal's most complete cultural food archive — one dish at a time." },
+  { title: "Preserve Heritage", desc: "Many traditional foods are disappearing. Documenting them keeps culture alive for future generations." },
+  { title: "Share Knowledge",    desc: "You may know a dish that no one else has documented. Your submission could be someone's discovery." },
+  { title: "Build a Resource",   desc: "Together we're building Nepal's most complete cultural food archive — one dish at a time." },
 ];
 
 const STEPS = [
@@ -59,11 +59,11 @@ export default function ContributePage() {
           </div>
 
           {/* Decorative food grid */}
-          <div className="contrib-hero-visual">
+          {/* <div className="contrib-hero-visual">
             {["🍱","🫕","🍲","🥘","🍜","🫓","🥗","🍛","🧆"].map((e, i) => (
               <div key={i} className="contrib-food-bubble" style={{ animationDelay: `${i * 0.15}s` }}>{e}</div>
             ))}
-          </div>
+          </div> */}
         </section>
 
         {/* ── Why contribute ── */}
@@ -102,17 +102,17 @@ export default function ContributePage() {
           <h2 className="contrib-section-title">What You'll Fill In</h2>
           <div className="contrib-fields-grid">
             {[
-              ["🍽️","Food Name",        "The authentic name in Nepali or local language."],
-              ["🏘️","Culture / Ethnicity","Which community is this food from?"],
-              ["📍","Location",          "Region or district where it's common."],
-              ["🎉","Festival",          "Is it tied to a celebration? (e.g. Dashain, Tihar)"],
-              ["🌿","Season",            "When is it traditionally eaten?"],
-              ["👅","Taste Profile",     "Sweet, Spicy, Sour, Salty, Umami or Mixed."],
-              ["📖","Description",       "Tell the story of the food — ingredients, preparation, significance."],
-              ["📸","Photo (optional)",  "A clear image goes a long way in the archive."],
-            ].map(([icon, label, hint]) => (
+              ["Food Name",        "The authentic name in Nepali or local language."],
+              ["Culture / Ethnicity","Which community is this food from?"],
+              ["Location",          "Region or district where it's common."],
+              ["Festival",          "Is it tied to a celebration? (e.g. Dashain, Tihar)"],
+              ["Season",            "When is it traditionally eaten?"],
+              ["Taste Profile",     "Sweet, Spicy, Sour, Salty, Umami or Mixed."],
+              ["Description",       "Tell the story of the food — ingredients, preparation, significance."],
+              ["Photo (optional)",  "A clear image goes a long way in the archive."],
+            ].map(([ label, hint]) => (
               <div key={label} className="contrib-field-chip">
-                <span className="contrib-field-icon">{icon}</span>
+
                 <div>
                   <p className="contrib-field-label">{label}</p>
                   <p className="contrib-field-hint">{hint}</p>

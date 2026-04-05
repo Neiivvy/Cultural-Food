@@ -44,7 +44,7 @@ app.use("/api/contributions", contributionRoutes);
 
 // Health check
 app.get("/api/health", (_req, res) =>
-  res.json({ success: true, message: "Server is running 🚀" })
+  res.json({ success: true, message: "Server is running " })
 );
 
 // 404
@@ -59,5 +59,5 @@ app.use((err, _req, res, _next) => {
 });
 
 app.listen(PORT, () =>
-  console.log(`🚀 Server running on http://localhost:${PORT}`)
+  console.log(`Server running on http://localhost:${PORT}`)
 );

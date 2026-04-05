@@ -4,14 +4,10 @@ import QuestionCard from "../components/QuestionCard";
 import { getFeed } from "../api/postService";
 import { getQuestions } from "../api/questionService";
 import useCultures from "../hooks/useCultures";
+import CultureFilter from "../components/CultureFilter";
+import NotificationPanel from "../components/NotificationPanel";
 import "./UserHomePage.css";
-
-const TYPE_TABS = [
-  { id: "all",      label: "All",       emoji: "🍽️" },
-  { id: "recipe",   label: "Recipes",   emoji: "📖" },
-  { id: "reel",     label: "Reels",     emoji: "▶"  },
-  { id: "question", label: "Questions", emoji: "❓" },
-];
+/* eslint-disable no-unused-vars */
 
 export default function UserHomePage() {
   const [posts,         setPosts]         = useState([]);
@@ -20,13 +16,14 @@ export default function UserHomePage() {
   const [cultureFilter, setCultureFilter] = useState("");
   const [loading,       setLoading]       = useState(true);
   const [error,         setError]         = useState("");
-  const [mobileSidebar, setMobileSidebar] = useState(false);
+  const [mobileCulture, setMobileCulture] = useState(false);
 
   const { cultures } = useCultures();
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   const loadFeed = useCallback(async () => {
-    setLoading(true); setError("");
+    setLoading(true);
+    setError("");
     try {
       const params = {};
       if (typeFilter === "recipe" || typeFilter === "reel") params.type = typeFilter;
@@ -36,7 +33,8 @@ export default function UserHomePage() {
         const qRes = await getQuestions();
         let qs = qRes.data.data.questions || [];
         if (cultureFilter) qs = qs.filter(q => String(q.culture_id) === cultureFilter);
-        setQuestions(qs); setPosts([]);
+        setQuestions(qs);
+        setPosts([]);
       } else if (typeFilter === "all") {
         const [postRes, qRes] = await Promise.all([getFeed(params), getQuestions()]);
         let qs = qRes.data.data.questions || [];
@@ -58,166 +56,123 @@ export default function UserHomePage() {
   useEffect(() => { loadFeed(); }, [loadFeed]);
 
   const handleLikeChange = (postId, liked, newCount) => {
-    setPosts(prev => prev.map(p =>
-      p.post_id === postId ? { ...p, liked_by_me: liked, likes_count: newCount } : p
-    ));
+    setPosts(prev =>
+      prev.map(p =>
+        p.post_id === postId ? { ...p, liked_by_me: liked, likes_count: newCount } : p
+      )
+    );
   };
 
-  const merged = typeFilter === "all"
-    ? [...posts.map(p => ({ ...p, _kind: "post" })),
-       ...questions.map(q => ({ ...q, _kind: "question" }))]
-        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-    : typeFilter === "question"
+  const merged =
+    typeFilter === "all"
+      ? [
+          ...posts.map(p => ({ ...p, _kind: "post" })),
+          ...questions.map(q => ({ ...q, _kind: "question" })),
+        ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+      : typeFilter === "question"
       ? questions.map(q => ({ ...q, _kind: "question" }))
       : posts.map(p => ({ ...p, _kind: "post" }));
-
-  const activeCultureName = cultures.find(c => String(c.culture_id) === cultureFilter)?.culture_name;
-  const total = merged.length;
 
   return (
     <div className="uhome">
 
-      {/* ── Culture tag strip (below UserNavBar) ── */}
-      <div className="uhome-culture-strip">
-        <div className="uhome-culture-strip-inner">
-          <span className="uhome-culture-strip-label">Culture:</span>
-          <div className="uhome-culture-chips">
-            <button
-              className={`uhome-culture-chip ${!cultureFilter ? "active" : ""}`}
-              onClick={() => setCultureFilter("")}
-            >
-              🌏 All
-            </button>
-            {cultures.map(c => (
-              <button
-                key={c.culture_id}
-                className={`uhome-culture-chip ${cultureFilter === String(c.culture_id) ? "active" : ""}`}
-                onClick={() => setCultureFilter(prev => prev === String(c.culture_id) ? "" : String(c.culture_id))}
-              >
-                {c.culture_name}
-              </button>
-            ))}
-          </div>
-          {/* Mobile: toggle type panel */}
-          <button
-            className="uhome-mob-filter-btn"
-            onClick={() => setMobileSidebar(o => !o)}
-            aria-label="Toggle feed type"
-          >
-            {TYPE_TABS.find(t => t.id === typeFilter)?.emoji} Filter
-            {typeFilter !== "all" && <span className="uhome-mob-dot" />}
-          </button>
-        </div>
-      </div>
+      {/* ── LEFT: Culture filter sidebar ── */}
+      <CultureFilter
+        cultures={cultures}
+        cultureFilter={cultureFilter}
+        setCultureFilter={setCultureFilter}
+      />
 
-      {/* ── Body: left aside + main feed ── */}
-      <div className="uhome-body">
+      {/* ── MAIN CONTENT ── */}
+      <main className="uhome-main">
 
-        {/* ── Left aside: type tabs + stats ── */}
-        {mobileSidebar && (
-          <div className="uhome-mob-overlay" onClick={() => setMobileSidebar(false)} />
+        {/* Mobile culture drawer */}
+        {mobileCulture && (
+          <>
+            <div className="uhome-mob-overlay" onClick={() => setMobileCulture(false)} />
+            <div className="uhome-mob-culture-drawer">
+              <div className="uhome-mob-drawer-header">
+                <span>Filter by Culture</span>
+                <button onClick={() => setMobileCulture(false)}>✕</button>
+              </div>
+              <div className="uhome-mob-culture-list">
+                <button
+                  className={`uhome-mob-chip ${!cultureFilter ? "active" : ""}`}
+                  onClick={() => { setCultureFilter(""); setMobileCulture(false); }}
+                >
+                  All Cultures
+                </button>
+                {cultures.map(c => (
+                  <button
+                    key={c.culture_id}
+                    className={`uhome-mob-chip ${cultureFilter === String(c.culture_id) ? "active" : ""}`}
+                    onClick={() => {
+                      setCultureFilter(prev =>
+                        prev === String(c.culture_id) ? "" : String(c.culture_id)
+                      );
+                      setMobileCulture(false);
+                    }}
+                  >
+                    {c.culture_name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
         )}
 
-        <aside className={`uhome-aside ${mobileSidebar ? "open" : ""}`}>
+        {/* Feed */}
+        <div className="uhome-feed-area">
 
-          {/* Welcome */}
-          <div className="uhome-aside-welcome">
-            <span className="uhome-wave">👋</span>
-            <div>
-              <p className="uhome-welcome-name">
-                Welcome, <strong>{user.name?.split(" ")[0] || "Friend"}</strong>
-              </p>
-              <p className="uhome-welcome-sub">
-                What's <em>cooking</em>?
-              </p>
+          {/* Page header + mobile controls row */}
+          <div className="uhome-feed-header">
+            <div className="uhome-feed-header-text">
+              <h1 className="uhome-header-title">Community Feed</h1>
+              <p className="uhome-header-sub">Recipes, reels and questions from Nepal's food communities</p>
             </div>
-          </div>
-
-          <div className="uhome-aside-divider" />
-
-          {/* Type navigation */}
-          <p className="uhome-aside-heading">Browse Feed</p>
-          <nav className="uhome-type-nav">
-            {TYPE_TABS.map(f => (
+            <div className="uhome-feed-header-actions">
               <button
-                key={f.id}
-                className={`uhome-type-btn ${typeFilter === f.id ? "active" : ""}`}
-                onClick={() => { setTypeFilter(f.id); setMobileSidebar(false); }}
+                className="uhome-culture-toggle"
+                onClick={() => setMobileCulture(true)}
               >
-                <span className="uhome-type-emoji">{f.emoji}</span>
-                <span className="uhome-type-label">{f.label}</span>
-                {typeFilter === f.id && <span className="uhome-type-indicator" />}
+                🌏 Culture
+                {cultureFilter && <span className="uhome-culture-dot" />}
               </button>
-            ))}
-          </nav>
-
-          <div className="uhome-aside-divider" />
-
-          {/* Stats card */}
-          <p className="uhome-aside-heading">📊 Feed</p>
-          <div className="uhome-stat-card">
-            <span className="uhome-stat-num">{total}</span>
-            <span className="uhome-stat-label">
-              {total === 1 ? "post" : "posts"}{activeCultureName ? ` · ${activeCultureName}` : ""}
-            </span>
-          </div>
-        </aside>
-
-        {/* ── Main feed ── */}
-        <main className="uhome-main">
-
-          {/* Active filter badges */}
-          {(cultureFilter || typeFilter !== "all") && (
-            <div className="uhome-active-filters">
-              {typeFilter !== "all" && (
-                <span className="uhome-filter-badge uhome-filter-badge--maroon">
-                  {TYPE_TABS.find(t => t.id === typeFilter)?.emoji}{" "}
-                  {TYPE_TABS.find(t => t.id === typeFilter)?.label}
-                  <button onClick={() => setTypeFilter("all")}>×</button>
-                </span>
-              )}
-              {cultureFilter && (
-                <span className="uhome-filter-badge uhome-filter-badge--teal">
-                  🌏 {activeCultureName}
-                  <button onClick={() => setCultureFilter("")}>×</button>
-                </span>
-              )}
+             
             </div>
-          )}
+          </div>
 
           {loading && (
-            <div className="uhome-empty">
+            <div className="uhome-state">
               <div className="uhome-spinner" />
-              <p>Loading feed…</p>
             </div>
           )}
 
           {!loading && error && (
-            <div className="uhome-empty">
-              <p>{error}</p>
-              <button className="uhome-retry-btn" onClick={loadFeed}>Retry</button>
+            <div className="uhome-state">
+              <p className="uhome-state-msg">{error}</p>
+              <button className="uhome-retry" onClick={loadFeed}>Try again</button>
             </div>
           )}
 
-          {!loading && !error && (
-            <div className="uhome-feed">
-              {merged.length === 0
-                ? (
-                  <div className="uhome-empty">
-                    <img src="https://api.iconify.design/noto/fork-and-knife-with-plate.svg" alt="" width="52" height="52" />
-                    <p>No posts found — try a different filter!</p>
-                  </div>
-                )
-                : merged.map(item =>
-                    item._kind === "question"
-                      ? <QuestionCard key={`q-${item.question_id}`} question={item} />
-                      : <PostCard key={`p-${item.post_id}`} post={item} onLikeChange={handleLikeChange} />
-                  )
-              }
+          {!loading && !error && merged.length === 0 && (
+            <div className="uhome-state">
+              <span className="uhome-state-icon">🍜</span>
+              <p className="uhome-state-msg">Nothing here yet</p>
             </div>
           )}
-        </main>
-      </div>
+
+          {!loading && !error && merged.length > 0 && (
+            <div className="uhome-feed">
+            {merged.map(item =>
+  item._kind === "question"
+    ? <QuestionCard key={`q-${item.question_id}`} question={item} />
+    : <PostCard key={`p-${item.post_id}`} post={item} onLikeChange={handleLikeChange} />
+)}
+            </div>
+          )}
+        </div>
+      </main>
     </div>
   );
 }

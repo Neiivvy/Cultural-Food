@@ -1,218 +1,187 @@
 .pcard {
-  background: var(--surface);
-  border-radius: var(--r-lg);
-  overflow: hidden;
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-sm);
+  background: #fff; border-radius: 1rem; overflow: hidden;
+  border: 1px solid #e8ddd5;
+  box-shadow: 0 1px 4px rgba(124,45,45,0.06);
   transition: box-shadow 0.22s, transform 0.22s;
 }
-.pcard:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
-}
+.pcard:hover { box-shadow: 0 4px 20px rgba(124,45,45,0.1); transform: translateY(-2px); }
 
-/* Header */
+/* ── Header ── */
 .pcard-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0.875rem 1rem 0.75rem;
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 0.5rem; padding: 0.875rem 1rem 0.75rem;
 }
-.pcard-author   { display: flex; align-items: center; gap: 0.6rem; }
-.pcard-avatar   { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 2px solid var(--pink-muted); }
-.pcard-author-name { display: block; font-size: 0.875rem; font-weight: 700; color: var(--text-1); }
-.pcard-meta     { display: flex; align-items: center; gap: 0.45rem; margin-top: 2px; }
-.pcard-culture  {
-  font-size: 0.67rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
-  padding: 2px 8px; border-radius: 20px; background: var(--pink-muted); color: var(--pink-dark);
-}
-.pcard-date     { font-size: 0.72rem; color: var(--text-3); }
-.pcard-reel-badge {
-  display: flex; align-items: center; gap: 4px;
-  font-size: 0.68rem; font-weight: 800; letter-spacing: 0.06em;
-  background: #111827; color: #fff; padding: 3px 9px; border-radius: 20px;
-}
+.pcard-author { display: flex; align-items: center; gap: 0.6rem; flex: 1; min-width: 0; }
+.pcard-avatar { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 2px solid #edf7f5; flex-shrink: 0; }
+.pcard-author-name { display: block; font-size: 0.875rem; font-weight: 700; color: #1a0f0f; }
+.pcard-date        { display: block; font-size: 0.72rem; color: #9c7c6a; margin-top: 1px; }
 
-/* Media */
-.pcard-media    { display: block; width: 100%; aspect-ratio: 4/3; overflow: hidden; position: relative; }
-.pcard-media img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.38s ease; }
+.pcard-header-right { display: flex; align-items: center; gap: 0.4rem; flex-shrink: 0; }
+
+/* Teal culture chip */
+.pcard-culture {
+  font-size: 0.67rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.05em; padding: 2px 8px; border-radius: 20px;
+  background: #edf7f5; color: #1f6058; white-space: nowrap;
+}
+.pcard-reel-badge   { font-size: 0.68rem; font-weight: 800; background: #111827; color: #fff; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+.pcard-recipe-badge { font-size: 0.68rem; font-weight: 800; background: #f3f4f6; color: #374151; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+
+/* Owner actions: edit + delete side by side */
+.pcard-owner-actions { display: flex; align-items: center; gap: 0.2rem; }
+.pcard-edit-btn, .pcard-delete-btn {
+  background: none; border: none; cursor: pointer;
+  padding: 5px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  transition: color 0.15s, background 0.15s;
+}
+.pcard-edit-btn   { color: #9c7c6a; }
+.pcard-edit-btn:hover   { color: #2a7d6f; background: #edf7f5; }
+.pcard-delete-btn { color: #9c7c6a; }
+.pcard-delete-btn:hover { color: #ef4444; background: #fef2f2; }
+
+/* ── Media ── */
+.pcard-media      { display: block; width: 100%; aspect-ratio: 4/3; overflow: hidden; position: relative; }
+.pcard-media-link { display: block; width: 100%; height: 100%; }
+.pcard-media img  { width: 100%; height: 100%; object-fit: cover; transition: transform 0.38s ease; display: block; }
 .pcard:hover .pcard-media img { transform: scale(1.04); }
 .pcard-reel-thumb { width: 100%; height: 100%; position: relative; background: #111; }
 .pcard-reel-thumb video { width: 100%; height: 100%; object-fit: cover; display: block; }
-.pcard-play-overlay {
-  position: absolute; inset: 0;
-  display: flex; align-items: center; justify-content: center;
-  background: rgba(0,0,0,0.22);
-}
-.pcard-play-btn {
-  width: 56px; height: 56px;
-  background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.7);
-  border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  backdrop-filter: blur(4px);
-}
+.pcard-play-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.22); }
+.pcard-play-btn { width: 56px; height: 56px; background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.7); border-radius: 50%; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
 
-/* Body */
-.pcard-body { padding: 0.875rem 1rem 1rem; }
+/* ── Body ── */
+.pcard-body  { padding: 0.875rem 1rem 1rem; }
+.pcard-title { font-family: 'Fraunces', serif; font-size: 1.05rem; font-weight: 600; color: #1a0f0f; line-height: 1.35; margin-bottom: 0.5rem; }
+.pcard-desc-wrap { margin-bottom: 0.5rem; }
+.pcard-desc  { font-size: 0.875rem; color: #4a3030; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
 
-.pcard-title {
-  font-family: 'Fraunces', serif; font-size: 1.05rem; font-weight: 600;
-  color: var(--text-1); line-height: 1.35; margin-bottom: 0.5rem;
-  transition: color 0.18s;
-}
-.pcard-title:hover { color: var(--pink); }
-
-/* Description — no line-clamp, shows fully; long text gets Read more button */
-.pcard-desc-wrap { margin-bottom: 0.875rem; }
-.pcard-desc {
-  font-size: 0.875rem; color: var(--text-2); line-height: 1.6;
-  white-space: pre-wrap; word-break: break-word;
-}
-.pcard-read-more {
+.pcard-see-recipe {
+  display: inline-flex; align-items: center; gap: 0.3rem;
   background: none; border: none; padding: 0;
-  font-size: 0.8rem; font-weight: 700; color: var(--pink);
-  cursor: pointer; margin-top: 3px; transition: opacity 0.15s;
+  font-size: 0.82rem; font-weight: 700; color: #2a7d6f;
+  cursor: pointer; margin-top: 0.3rem; margin-bottom: 0.5rem; transition: opacity 0.15s;
 }
-.pcard-read-more:hover { opacity: 0.75; }
+.pcard-see-recipe:hover { opacity: 0.75; }
 
-/* Actions */
-.pcard-actions {
-  display: flex; gap: 0.5rem;
-  padding-top: 0.6rem; border-top: 1px solid var(--border);
-}
-.pcard-btn {
-  display: flex; align-items: center; gap: 0.35rem;
-  background: none; border: none; font-size: 0.875rem; font-weight: 600;
-  color: var(--text-2); padding: 0.4rem 0.65rem; border-radius: var(--r-sm);
-  transition: all 0.18s; cursor: pointer;
-}
-.pcard-btn:hover        { background: var(--surface-alt); }
-.pcard-like.liked       { color: #ef4444; }
-.pcard-like.liked svg   { fill: #ef4444; stroke: #ef4444; }
-.pcard-like:hover       { color: #ef4444; }
-.pcard-comment:hover    { color: var(--pink); }
+/* ── Actions ── */
+.pcard-actions { display: flex; gap: 0.5rem; padding-top: 0.6rem; border-top: 1px solid #e8ddd5; }
+.pcard-btn { display: flex; align-items: center; gap: 0.35rem; background: none; border: none; font-size: 0.875rem; font-weight: 600; color: #5a3a3a; padding: 0.4rem 0.65rem; border-radius: 0.5rem; transition: all 0.18s; cursor: pointer; }
+.pcard-btn:hover     { background: #fdf8f5; }
+.pcard-like.liked    { color: #ef4444; }
+.pcard-like.liked svg { fill: #ef4444; stroke: #ef4444; }
+.pcard-like:hover    { color: #ef4444; }
+.pcard-comment:hover  { color: #2a7d6f; }
+.pcard-comment.active { color: #2a7d6f; }
 
-/* Comments section */
-.pcard-comments {
-  margin-top: 0.875rem; padding-top: 0.875rem;
-  border-top: 1px solid var(--border);
-  display: flex; flex-direction: column; gap: 0.75rem;
-  animation: fadeUp 0.2s ease;
-}
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.pcard-no-comments { font-size: 0.825rem; color: var(--text-3); text-align: center; padding: 0.5rem 0; }
-
+/* ── Comments ── */
+.pcard-comments { margin-top: 0.875rem; padding-top: 0.875rem; border-top: 1px solid #e8ddd5; display: flex; flex-direction: column; gap: 0.75rem; animation: fadeUp 0.2s ease; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.pcard-no-comments { font-size: 0.825rem; color: #9c7c6a; text-align: center; padding: 0.5rem 0; }
 .pcard-comment-item { display: flex; gap: 0.55rem; align-items: flex-start; }
 .pcard-cmt-avatar   { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
 .pcard-cmt-body     { flex: 1; }
-.pcard-cmt-name     {
-  font-size: 0.8rem; font-weight: 700; color: var(--text-1); margin-right: 0.4rem;
-  transition: color 0.15s;
-}
-.pcard-cmt-name:hover { color: var(--pink); }
-.pcard-cmt-text     { font-size: 0.825rem; color: var(--text-2); line-height: 1.45; margin: 2px 0; }
-.pcard-cmt-time     { font-size: 0.69rem; color: var(--text-3); }
+.pcard-cmt-name     { font-size: 0.8rem; font-weight: 700; color: #1a0f0f; margin-right: 0.4rem; transition: color 0.15s; }
+.pcard-cmt-name:hover { color: #2a7d6f; }
+.pcard-cmt-text     { font-size: 0.825rem; color: #4a3030; line-height: 1.45; margin: 2px 0; }
+.pcard-cmt-time     { font-size: 0.69rem; color: #9c7c6a; }
+.pcard-mention      { color: #7c2d2d; font-weight: 700; background: #f9f0f0; border-radius: 4px; padding: 0 3px; }
+.pcard-cmt-form     { display: flex; gap: 0.45rem; align-items: center; }
+.pcard-cmt-input { flex: 1; padding: 0.48rem 0.85rem; border: 1.5px solid #e0d4cc; border-radius: 20px; font-size: 0.855rem; font-family: inherit; background: #fdf8f5; outline: none; color: #1a0f0f; transition: border-color 0.18s; }
+.pcard-cmt-input:focus { border-color: #2a7d6f; }
+.pcard-cmt-submit { padding: 0.44rem 0.9rem; background: #2a7d6f; color: #fff; border: none; border-radius: 20px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: background 0.18s; }
+.pcard-cmt-submit:hover    { background: #1f6058; }
+.pcard-cmt-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+.pcard-comments-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem; font-size: 0.82rem; font-weight: 700; color: #4a3030; }
+.pcard-close-cmt { background: none; border: none; cursor: pointer; font-size: 0.78rem; color: #9c7c6a; font-weight: 600; padding: 2px 6px; border-radius: 4px; transition: color 0.15s, background 0.15s; }
+.pcard-close-cmt:hover { color: #7c2d2d; background: #f9f0f0; }
 
-/* @mention highlight inside comment text */
-.pcard-mention {
-  color: var(--pink); font-weight: 700; background: var(--pink-muted);
-  border-radius: 4px; padding: 0 3px;
-}
-
-.pcard-cmt-form  { display: flex; gap: 0.45rem; align-items: center; }
-.pcard-cmt-input {
-  flex: 1; padding: 0.48rem 0.85rem;
-  border: 1.5px solid var(--border); border-radius: 20px;
-  font-size: 0.855rem; font-family: inherit;
-  background: var(--surface-alt); outline: none; transition: border-color 0.18s;
-}
-.pcard-cmt-input:focus { border-color: var(--pink); }
-.pcard-cmt-submit {
-  padding: 0.44rem 0.9rem; background: var(--pink); color: #fff;
-  border: none; border-radius: 20px; font-size: 0.8rem; font-weight: 700;
-  cursor: pointer; transition: background 0.18s;
-}
-.pcard-cmt-submit:hover    { background: var(--pink-dark); }
-.pcard-cmt-submit:disabled { background: #f9a8d4; cursor: not-allowed; }
-
-/* Header right side */
-.pcard-header-right {
-  display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0;
-}
-
-/* Delete button */
-.pcard-delete-btn {
-  background: none; border: none; cursor: pointer;
-  color: #9ca3af; padding: 5px; border-radius: var(--r-sm);
-  display: flex; align-items: center; justify-content: center;
-  transition: color 0.15s, background 0.15s;
-}
-.pcard-delete-btn:hover { color: #ef4444; background: #fef2f2; }
-
-/* Comment section header (with close btn) */
-.pcard-comments-header {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 0.6rem;
-  font-size: 0.82rem; font-weight: 700; color: var(--text-2);
-}
-.pcard-close-cmt {
-  background: none; border: none; cursor: pointer;
-  font-size: 0.78rem; color: var(--text-3); font-weight: 600;
-  padding: 2px 6px; border-radius: 4px;
-  transition: color 0.15s, background 0.15s;
-}
-.pcard-close-cmt:hover { color: var(--pink); background: var(--pink-muted); }
-
-/* Active comment button */
-.pcard-comment.active { color: var(--pink); }
-
-/* Delete confirmation modal */
-.pcard-modal-overlay {
-  position: fixed; inset: 0; z-index: 1000;
-  background: rgba(0,0,0,0.45);
-  display: flex; align-items: center; justify-content: center;
-  padding: 1rem;
-  animation: fadeIn 0.15s ease;
-}
+/* ── Delete confirm modal ── */
+.pcard-modal-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; padding: 1rem; animation: fadeIn 0.15s ease; }
 @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
-
-.pcard-modal {
-  background: #fff; border-radius: 1.25rem;
-  padding: 2rem 1.75rem; max-width: 360px; width: 100%;
-  text-align: center;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-  animation: slideUp 0.2s ease;
-}
+.pcard-modal { background: #fff; border-radius: 1.25rem; padding: 2rem 1.75rem; max-width: 360px; width: 100%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.2); animation: slideUp 0.2s ease; }
 @keyframes slideUp { from { transform: translateY(16px); opacity:0; } to { transform: translateY(0); opacity:1; } }
-
-.pcard-modal-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
-.pcard-modal-title { font-size: 1.2rem; font-weight: 800; color: #111827; margin: 0 0 0.5rem; }
-.pcard-modal-body  { font-size: 0.88rem; color: #6b7280; margin: 0 0 1.5rem; line-height: 1.5; }
+.pcard-modal-icon  { font-size: 2.5rem; margin-bottom: 0.75rem; }
+.pcard-modal-title { font-size: 1.1rem; font-weight: 800; color: #111827; margin: 0 0 0.5rem; }
+.pcard-modal-body  { font-size: 0.875rem; color: #6b7280; margin: 0 0 1.5rem; line-height: 1.5; }
 .pcard-modal-btns  { display: flex; gap: 0.75rem; }
-.pcard-modal-cancel {
-  flex: 1; padding: 0.7rem; border: 1.5px solid #e5e7eb;
-  border-radius: 0.7rem; background: #fff; color: #374151;
-  font-weight: 700; font-size: 0.9rem; cursor: pointer;
-  transition: background 0.15s;
-}
-.pcard-modal-cancel:hover { background: #f9fafb; }
-.pcard-modal-confirm {
-  flex: 1; padding: 0.7rem; border: none;
-  border-radius: 0.7rem; background: #ef4444; color: #fff;
-  font-weight: 700; font-size: 0.9rem; cursor: pointer;
-  transition: background 0.15s;
-}
+.pcard-modal-cancel  { flex: 1; padding: 0.7rem; border: 1.5px solid #e5e7eb; border-radius: 0.7rem; background: #fff; color: #374151; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: background 0.15s; }
+.pcard-modal-cancel:hover  { background: #f9fafb; }
+.pcard-modal-confirm { flex: 1; padding: 0.7rem; border: none; border-radius: 0.7rem; background: #ef4444; color: #fff; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: background 0.15s; }
 .pcard-modal-confirm:hover { background: #dc2626; }
+
+/* ── Edit modal ── */
+.pcard-edit-modal {
+  background: #fff; border-radius: 1.25rem;
+  width: 100%; max-width: 480px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  animation: slideUp 0.2s ease; overflow: hidden;
+}
+.pcard-edit-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.1rem 1.4rem 0.9rem; border-bottom: 1px solid #f0e8e0;
+}
+.pcard-edit-modal-title { font-size: 1.1rem; font-weight: 800; color: #7c2d2d; margin: 0; }
+.pcard-edit-modal-close { background: none; border: none; cursor: pointer; font-size: 1.1rem; color: #9c7c6a; padding: 2px 6px; border-radius: 6px; transition: background 0.15s; }
+.pcard-edit-modal-close:hover { background: #fdf5f0; color: #7c2d2d; }
+.pcard-edit-fields { padding: 1.1rem 1.4rem; display: flex; flex-direction: column; gap: 0.875rem; }
+.pcard-edit-field  { display: flex; flex-direction: column; gap: 0.3rem; }
+.pcard-edit-label  { font-size: 0.82rem; font-weight: 700; color: #4a3030; }
+.pcard-edit-input  { padding: 0.65rem 0.85rem; border: 1.5px solid #e0d4cc; border-radius: 0.6rem; font-size: 0.9rem; font-family: inherit; color: #1a0f0f; outline: none; transition: border-color 0.18s; }
+.pcard-edit-input:focus { border-color: #7c2d2d; box-shadow: 0 0 0 3px rgba(124,45,45,0.08); }
+.pcard-edit-textarea { resize: vertical; min-height: 120px; line-height: 1.6; }
+.pcard-edit-err { font-size: 0.82rem; color: #c0392b; margin: 0 1.4rem; }
+.pcard-edit-footer { display: flex; gap: 0.75rem; padding: 0.9rem 1.4rem 1.2rem; border-top: 1px solid #f0e8e0; }
+.pcard-edit-cancel { flex: 1; padding: 0.65rem; border: 1.5px solid #e0d4cc; border-radius: 0.6rem; background: #fff; color: #4a3030; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: background 0.15s; }
+.pcard-edit-cancel:hover { background: #fdf5f0; }
+.pcard-edit-save { flex: 2; padding: 0.65rem; border: none; border-radius: 0.6rem; background: #7c2d2d; color: #fff; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: background 0.18s; }
+.pcard-edit-save:hover:not(:disabled) { background: #5c1f1f; }
+.pcard-edit-save:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ── Full recipe overlay ── */
+.pcard-recipe-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; padding: 1.5rem; animation: fadeIn 0.15s ease; }
+.pcard-recipe-modal { background: #fff; border-radius: 1.25rem; width: 100%; max-width: 540px; max-height: 88vh; overflow-y: auto; box-shadow: 0 24px 60px rgba(0,0,0,0.22); animation: slideUp 0.2s ease; }
+.pcard-recipe-modal-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 1.25rem 1.4rem 0.75rem; border-bottom: 1px solid #f0e8e0; position: sticky; top: 0; background: #fff; z-index: 1; }
+.pcard-recipe-modal-title { font-family: 'Fraunces', serif; font-size: 1.25rem; font-weight: 700; color: #1a0f0f; margin: 0; line-height: 1.3; flex: 1; padding-right: 1rem; }
+.pcard-recipe-modal-close { background: none; border: none; cursor: pointer; font-size: 1.1rem; color: #9c7c6a; padding: 2px 6px; border-radius: 6px; flex-shrink: 0; transition: background 0.15s, color 0.15s; }
+.pcard-recipe-modal-close:hover { background: #fdf5f0; color: #7c2d2d; }
+.pcard-recipe-modal-img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; }
+.pcard-recipe-modal-body { padding: 1.1rem 1.4rem 1.75rem; }
+.pcard-recipe-modal-meta { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.85rem; }
+.pcard-recipe-modal-culture { display: inline-block; font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; background: #edf7f5; color: #1f6058; padding: 2px 8px; border-radius: 20px; }
+.pcard-recipe-modal-author  { font-size: 0.8rem; color: #9c7c6a; font-weight: 500; }
+.pcard-recipe-modal-desc { font-size: 0.9rem; color: #3d2020; line-height: 1.7; white-space: pre-wrap; word-break: break-word; margin-bottom: 0.5rem; }
+
+/* Loading */
+.pcard-recipe-loading { display: flex; align-items: center; gap: 0.6rem; padding: 1.25rem 0; color: #9c7c6a; font-size: 0.875rem; }
+.pcard-recipe-spinner { width: 20px; height: 20px; flex-shrink: 0; border: 2px solid #e8ddd5; border-top-color: #2a7d6f; border-radius: 50%; animation: pcard-spin 0.7s linear infinite; }
+@keyframes pcard-spin { to { transform: rotate(360deg); } }
+
+/* Sections */
+.pcard-recipe-modal-section { margin-top: 1.25rem; }
+.pcard-recipe-modal-section-title { font-family: 'Fraunces', serif; font-size: 0.95rem; font-weight: 700; color: #7c2d2d; margin: 0 0 0.6rem; padding-bottom: 0.35rem; border-bottom: 1.5px solid #f0e8e0; }
+
+/* Ingredients — ingredient_text is a full string */
+.pcard-recipe-modal-ingredients { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.3rem; }
+.pcard-recipe-ing-item { display: flex; align-items: flex-start; gap: 0.5rem; padding: 0.3rem 0; border-bottom: 1px solid #faf4f0; }
+.pcard-recipe-ing-item:last-child { border-bottom: none; }
+.pcard-recipe-ing-dot  { color: #2a7d6f; font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+.pcard-recipe-ing-text { font-size: 0.875rem; color: #3d2020; line-height: 1.5; }
+
+/* Steps */
+.pcard-recipe-modal-steps { padding-left: 1.25rem; margin: 0; display: flex; flex-direction: column; gap: 0.65rem; }
+.pcard-recipe-modal-steps li { font-size: 0.875rem; color: #3d2020; line-height: 1.6; }
 
 /* ── Responsive ── */
 @media (max-width: 480px) {
-  .pcard { border-radius: 0.75rem; }
-  .pcard-header { padding: 0.75rem 0.875rem 0.5rem; }
-  .pcard-body   { padding: 0 0.875rem 0.75rem; }
-  .pcard-author-name { font-size: 0.85rem; }
-  .pcard-title { font-size: 1rem; }
-  .pcard-desc  { font-size: 0.83rem; }
+  .pcard         { border-radius: 0.75rem; }
+  .pcard-header  { padding: 0.75rem 0.875rem 0.5rem; }
+  .pcard-body    { padding: 0.75rem 0.875rem 0.875rem; }
   .pcard-cmt-form { flex-direction: column; }
-  .pcard-cmt-input { border-radius: 0.5rem; }
-  .pcard-cmt-submit { border-radius: 0.5rem; width: 100%; padding: 0.55rem; }
+  .pcard-cmt-input, .pcard-cmt-submit { border-radius: 0.5rem; }
+  .pcard-cmt-submit { width: 100%; padding: 0.55rem; }
+  .pcard-recipe-modal { border-radius: 1rem; max-height: 92vh; }
+  .pcard-recipe-modal-header, .pcard-recipe-modal-body { padding-left: 1rem; padding-right: 1rem; }
+  .pcard-edit-modal { border-radius: 1rem; }
+  .pcard-edit-modal-header, .pcard-edit-fields, .pcard-edit-footer { padding-left: 1rem; padding-right: 1rem; }
 }

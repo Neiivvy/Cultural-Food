@@ -32,7 +32,7 @@ const uploadFoodImage = multer({
 // ── Public routes ─────────────────────────────────────────────
 router.get("/filters",              getFilterOptions);    // MUST be before /:id
 router.get("/",                      getApprovedFoods);
-router.get("/:id/recommendations",   getRecommendations);  // MUST be before /:id
+router.get("/:id/recommendations",   getRecommendations);  // MUST be before /:id this is the algorithm route
 router.get("/:id",                   getFoodById);
 
 // ── Auth: submit food ─────────────────────────────────────────

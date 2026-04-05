@@ -2,8 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { getNotifications } from '../api/notificationService';
 import { updateProfile } from '../api/userService';
+import NotificationPanel from './NotificationPanel';
 import './UserNavBar.css';
 /* eslint-disable no-unused-vars */
+
 /* ── Icons ── */
 const HomeIcon    = ({ filled }) => (<svg width="20" height="20" viewBox="0 0 24 24" fill={filled?'currentColor':'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>);
 const RecipeIcon  = ({ filled }) => (<svg width="20" height="20" viewBox="0 0 24 24" fill={filled?'currentColor':'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>);
@@ -15,6 +17,7 @@ const ChevronIcon = ()           => (<svg width="13" height="13" viewBox="0 0 24
 const EditIcon    = ()           => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>);
 const CameraIcon  = ()           => (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>);
 const CloseIcon   = ()           => (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>);
+const BellIcon    = ({ filled }) => (<svg width="20" height="20" viewBox="0 0 24 24" fill={filled?'currentColor':'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>);
 
 const MOB_ITEMS = [
   { path: '/homeUser',  label: 'Home',      Icon: HomeIcon   },
@@ -24,7 +27,7 @@ const MOB_ITEMS = [
   { path: '/profile',   label: 'Profile',   Icon: UserIcon   },
 ];
 
-/* ── Avatar helper — shows real pic or initials ── */
+/* ── Avatar helper ── */
 function Avatar({ src, name, size = 34, className = '' }) {
   const [imgError, setImgError] = useState(false);
 
@@ -38,7 +41,6 @@ function Avatar({ src, name, size = 34, className = '' }) {
       />
     );
   }
-  // Show initials
   const initials = (name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   return (
     <span
@@ -77,7 +79,6 @@ function ManageProfileOverlay({ user, onClose, onSaved }) {
       if (picFile) fd.append('profile_picture', picFile);
       const res     = await updateProfile(user.user_id, fd);
       const updated = res.data.data?.user || res.data.user || {};
-      // Merge into localStorage
       const stored  = JSON.parse(localStorage.getItem('user') || '{}');
       const merged  = { ...stored, name: updated.name || name.trim(), bio: updated.bio || bio.trim(), profile_picture: updated.profile_picture || stored.profile_picture };
       if (picFile && updated.profile_picture) merged.profile_picture = updated.profile_picture;
@@ -102,7 +103,6 @@ function ManageProfileOverlay({ user, onClose, onSaved }) {
           <button className="mpo-close" onClick={onClose}><CloseIcon /></button>
         </div>
 
-        {/* Avatar picker */}
         <div className="mpo-avatar-section">
           <div className="mpo-avatar-wrap" onClick={() => fileRef.current?.click()}>
             <Avatar src={currentPic} name={name} size={80} className="mpo-avatar-img" />
@@ -112,26 +112,15 @@ function ManageProfileOverlay({ user, onClose, onSaved }) {
           <p className="mpo-avatar-hint">Click to change photo</p>
         </div>
 
-        {/* Fields */}
         <div className="mpo-fields">
           {error && <p className="mpo-error">⚠ {error}</p>}
-
           <div className="mpo-field">
             <label className="mpo-label">Username</label>
-            <input
-              type="text" className="mpo-input"
-              value={name} onChange={e => setName(e.target.value)}
-              placeholder="Your name"
-            />
+            <input type="text" className="mpo-input" value={name} onChange={e => setName(e.target.value)} placeholder="Your name" />
           </div>
-
           <div className="mpo-field">
             <label className="mpo-label">Bio</label>
-            <textarea
-              className="mpo-textarea" rows={3}
-              value={bio} onChange={e => setBio(e.target.value)}
-              placeholder="Tell people about yourself…"
-            />
+            <textarea className="mpo-textarea" rows={3} value={bio} onChange={e => setBio(e.target.value)} placeholder="Tell people about yourself…" />
           </div>
         </div>
 
@@ -151,6 +140,7 @@ export default function UserNavBar() {
   const location = useLocation();
   const navigate = useNavigate();
   const [dropOpen,     setDropOpen]     = useState(false);
+  const [notifOpen,    setNotifOpen]    = useState(false);
   const [unreadCount,  setUnreadCount]  = useState(0);
   const [showManage,   setShowManage]   = useState(false);
   const [currentUser,  setCurrentUser]  = useState(() => JSON.parse(localStorage.getItem('user') || '{}'));
@@ -204,7 +194,6 @@ export default function UserNavBar() {
       <nav className="unav">
         <div className="unav-inner">
 
-          {/* Brand — clicking goes to public home */}
           <Link to="/" className="unav-brand">
             <span className="unav-brand-text">
               <span className="unav-brand-k">Khana</span>
@@ -212,31 +201,36 @@ export default function UserNavBar() {
             </span>
           </Link>
 
-          {/* Centre links */}
           <div className="unav-links">
             <Link to="/homeUser"  className={`unav-link ${isActive('/homeUser')  ? 'active' : ''}`}><HomeIcon   filled={isActive('/homeUser')}  /><span>Home</span></Link>
             <Link to="/recipes"   className={`unav-link ${isActive('/recipes')   ? 'active' : ''}`}><RecipeIcon filled={isActive('/recipes')}   /><span>Recipes</span></Link>
             <Link to="/questions" className={`unav-link ${isActive('/questions') ? 'active' : ''}`}><ChatIcon   filled={isActive('/questions')} /><span>Questions</span></Link>
             <Link to="/profile"   className={`unav-link ${isActive('/profile')   ? 'active' : ''}`}>
-              <span className="unav-link-icon-wrap">
-                <UserIcon filled={isActive('/profile')} />
-                {unreadCount > 0 && <span className="unav-link-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>}
-              </span>
+              <UserIcon filled={isActive('/profile')} />
               <span>My Profile</span>
             </Link>
           </div>
 
-          {/* Right: post button + avatar dropdown */}
           <div className="unav-right">
             <Link to="/add" className="unav-post-btn"><PlusIcon /> New Post</Link>
 
+            {/* ── Notification bell ── */}
+            <button
+              className={`unav-notif-btn ${notifOpen ? 'active' : ''}`}
+              onClick={() => setNotifOpen(o => !o)}
+              title="Notifications"
+            >
+              <BellIcon filled={notifOpen} />
+              {unreadCount > 0 && (
+                <span className="unav-notif-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>
+              )}
+            </button>
+
+            {/* ── Avatar + dropdown ── */}
             <div className="unav-avatar-wrap" ref={dropRef}>
               <button className="unav-avatar-btn" onClick={() => setDropOpen(o => !o)}>
                 <div className="unav-avatar-ring">
                   <Avatar src={currentUser.profile_picture} name={currentUser.name} size={32} className="unav-avatar-img" />
-                  {unreadCount > 0 && (
-                    <span className="unav-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>
-                  )}
                 </div>
                 <ChevronIcon />
               </button>
@@ -264,6 +258,17 @@ export default function UserNavBar() {
         </div>
       </nav>
 
+      {/* ══ NOTIFICATION PANEL (right aside) ══ */}
+      {notifOpen && (
+        <>
+          {/* Backdrop — click outside to close */}
+          <div className="unav-notif-backdrop" onClick={() => setNotifOpen(false)} />
+          <aside className="unav-notif-aside">
+            <NotificationPanel onClose={() => setNotifOpen(false)} />
+          </aside>
+        </>
+      )}
+
       {/* ══ MOBILE BOTTOM NAV ══ */}
       <nav className="unav-mob">
         {MOB_ITEMS.map(({ path, label, Icon, isAdd }) => (
@@ -278,7 +283,6 @@ export default function UserNavBar() {
               <>
                 <span className="unav-mob-icon-wrap">
                   <Avatar src={currentUser.profile_picture} name={currentUser.name} size={24} className="unav-mob-avatar" />
-                  {unreadCount > 0 && <span className="unav-mob-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>}
                 </span>
                 <span className="unav-mob-label">{label}</span>
               </>
@@ -290,6 +294,19 @@ export default function UserNavBar() {
             )}
           </Link>
         ))}
+
+        {/* Mobile bell tab */}
+        <button
+          className={`unav-mob-item ${notifOpen ? 'active' : ''}`}
+          onClick={() => setNotifOpen(o => !o)}
+          style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+        >
+          <span className="unav-mob-icon-wrap">
+            <BellIcon filled={notifOpen} />
+            {unreadCount > 0 && <span className="unav-mob-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>}
+          </span>
+          <span className="unav-mob-label">Alerts</span>
+        </button>
       </nav>
 
       {/* ══ MANAGE PROFILE OVERLAY ══ */}

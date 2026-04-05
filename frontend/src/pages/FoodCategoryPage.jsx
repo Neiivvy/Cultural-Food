@@ -10,7 +10,7 @@ const CATEGORIES = [
     id: 'newari',
     label: 'Newari',
     nepali: 'नेवारी',
-    desc: 'The Newar community — original inhabitants of the Kathmandu Valley — have one of Nepal\'s oldest and most elaborate food cultures.',
+    desc: 'The Newar community  original inhabitants of the Kathmandu Valley , have one of Nepal\'s oldest and most elaborate food cultures.',
     cultures: ['Newari'],
     accent: '#7c2d2d',
     accentLight: '#f9f0f0',
@@ -20,7 +20,7 @@ const CATEGORIES = [
     id: 'brahmin-chhetri',
     label: 'Brahmin / Chhetri',
     nepali: 'ब्राह्मण / क्षेत्री',
-    desc: 'Rooted in Hindu ritual and the mid-hill agricultural calendar — dal bhat, ghee, seasonal vegetables, and festival sweets.',
+    desc: 'Rooted in Hindu ritual and the mid-hill agricultural calendar dal bhat, ghee, seasonal vegetables, and festival sweets.',
     cultures: ['Brahmin/Chhetri'],
     accent: '#1f6058',
     accentLight: '#edf7f5',
@@ -30,8 +30,8 @@ const CATEGORIES = [
     id: 'madhesi',
     label: 'Madhesi',
     nepali: 'मधेसी',
-    desc: 'From the fertile Terai plains — Madhesi and Tharu communities shaped by the Gangetic tradition and festivals like Chhath.',
-    cultures: ['Madhesi', 'Tharu'],
+    desc: 'From the fertile Terai plains Madhesi and Tharu communities shaped by the Gangetic tradition and festivals like Chhath.',
+    cultures: ['Madhesi'],
     accent: '#92400e',
     accentLight: '#fef3c7',
     image: 'https://images.unsplash.com/photo-1631515243349-e0cb75fb8d3a?w=800&q=80',
@@ -40,8 +40,8 @@ const CATEGORIES = [
     id: 'janajati',
     label: 'Janajati',
     nepali: 'जनजाति',
-    desc: 'Nepal\'s diverse indigenous nationalities — Tamang, Rai, Gurung, Magar, Limbu, Sherpa, Thakali and more.',
-    cultures: ['Tamang', 'Rai', 'Gurung', 'Magar', 'Limbu', 'Sherpa', 'Thakali'],
+    desc: 'Nepal\'s diverse indigenous nationalities Tamang, Rai, Gurung, Magar, Limbu, Sherpa, Thakali and more.',
+    cultures: ['Janajati'],
     accent: '#1d4ed8',
     accentLight: '#eff6ff',
     image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=800&q=80',
@@ -50,13 +50,13 @@ const CATEGORIES = [
 
 /* ── Filter definitions ─────────────────────────────────────────── */
 const FILTER_DEFS = [
-  { key: 'taste',      label: '👅 Taste',      options: ['Sweet','Spicy','Sour','Salty','Bitter','Umami','Mixed'] },
-  { key: 'season',     label: '🌿 Season',     options: ['Spring','Summer','Autumn','Winter','All Season'] },
-  { key: 'festival',   label: '🎉 Festival',   options: ['Dashain','Tihar','Chhath','Maghe Sankranti','Indra Jatra','Yomari Punhi','Maghi','Janai Purnima'] },
-  { key: 'meal_type',  label: '🍽 Meal',       options: ['Breakfast','Lunch','Dinner','Snack','Dessert'] },
-  { key: 'occasion',   label: '🕯 Occasion',   options: ['Festival','Wedding','Everyday','Offering'] },
-  { key: 'ingredient', label: '🌾 Ingredient', options: ['Rice','Lentil','Meat','Buckwheat','Millet','Barley','Dairy','Vegetables','Legumes'] },
-  { key: 'veg_status', label: '🥬 Diet',       options: ['veg','non-veg','vegan'] },
+  { key: 'taste',      label: 'Taste',      options: ['Sweet','Spicy','Sour','Salty','Bitter','Umami','Mixed'] },
+  { key: 'season',     label: ' Season',     options: ['Spring','Summer','Autumn','Winter','All Season'] },
+  { key: 'festival',   label: 'Festival',   options: ['Dashain','Tihar','Chhath','Maghe Sankranti','Indra Jatra','Yomari Punhi','Maghi','Janai Purnima'] },
+  { key: 'meal_type',  label: 'Meal',       options: ['Breakfast','Lunch','Dinner','Snack','Dessert'] },
+  { key: 'occasion',   label: 'Occasion',   options: ['Festival','Wedding','Everyday','Offering'] },
+  { key: 'ingredient', label: 'Ingredient', options: ['Rice','Lentil','Meat','Buckwheat','Millet','Barley','Dairy','Vegetables','Legumes'] },
+  { key: 'veg_status', label: 'Diet',       options: ['veg','non-veg','vegan'] },
 ];
 
 /* ── Food card ─────────────────────────────────────────────────── */
@@ -131,6 +131,7 @@ export default function FoodCategoryPage() {
       if (filters.veg_status) params.veg_status = filters.veg_status;
       if (search) params.search = search;
 
+    
       const res  = await getApprovedFoods(params);
       let   data = res.data.data.foods || [];
 

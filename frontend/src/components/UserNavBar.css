@@ -274,3 +274,73 @@
   .mpo-modal { border-radius: 1rem; }
   .mpo-header, .mpo-fields, .mpo-footer { padding-left: 1.1rem; padding-right: 1.1rem; }
 }
+/* ── ADD THESE RULES TO THE BOTTOM OF YOUR EXISTING UserNavBar.css ── */
+
+/* ── Notification bell button ── */
+.unav-notif-btn {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  width: 38px; height: 38px;
+  background: none;
+  border: 2px solid var(--nav-border);
+  border-radius: 50%;
+  color: #4a3030;
+  cursor: pointer;
+  transition: border-color 0.18s, color 0.18s, background 0.18s;
+  flex-shrink: 0;
+}
+.unav-notif-btn:hover,
+.unav-notif-btn.active {
+  border-color: var(--maroon);
+  color: var(--maroon);
+  background: var(--maroon-light);
+}
+
+.unav-notif-badge {
+  position: absolute; top: -4px; right: -4px;
+  min-width: 16px; height: 16px; padding: 0 3px;
+  background: var(--maroon); color: #fff;
+  border-radius: 20px; font-size: 0.6rem; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  border: 1.5px solid #fff; pointer-events: none;
+}
+
+/* ── Notification aside panel ── */
+.unav-notif-backdrop {
+  position: fixed; inset: 0;
+  z-index: 250;
+  background: rgba(26, 15, 15, 0.25);
+  animation: fadeIn 0.15s ease;
+}
+
+.unav-notif-aside {
+  position: fixed;
+  top: var(--nav-h);     /* sits directly below the navbar */
+  right: 0;
+  bottom: 0;
+  width: 360px;
+  max-width: 92vw;
+  z-index: 260;
+  background: #fff;
+  border-left: 1.5px solid var(--nav-border);
+  box-shadow: -6px 0 32px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+  animation: slideInRight 0.22s ease;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(24px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+/* On mobile the aside sits above the bottom nav */
+@media (max-width: 767px) {
+  .unav-notif-aside {
+    top: 0;
+    bottom: var(--mob-nav-h);
+    width: 100%;
+    max-width: 100%;
+    border-left: none;
+    border-top: 1.5px solid var(--nav-border);
+  }
+}
