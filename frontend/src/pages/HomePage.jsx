@@ -57,10 +57,10 @@ export default function HomePage() {
           {/* Mosaic */}
           <div className="hp-hero-mosaic">
             {[
-              { name: 'Yomari',    culture: 'Newari',           image: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=500&q=80' },
-              { name: 'Momos',     culture: 'Sherpa · Janajati', image: 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=500&q=80' },
-              { name: 'Dal Bhat',  culture: 'Brahmin/Chhetri',  image: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=500&q=80' },
-              { name: 'Sel Roti',  culture: 'Brahmin/Chhetri',  image: 'https://images.unsplash.com/photo-1509722747041-616f39b57569?w=500&q=80' },
+              { name: 'Yomari',    culture: 'Newari',           image: 'https://superdesk-pro-c.s3.amazonaws.com/sd-nepalitimes/20221108131144/636a4fc99c7e80680e04fd28jpeg.jpg' },
+              { name: 'Kinema',     culture: 'Limbu · Janajati', image: 'https://annapurnaexpress.prixacdn.net/media/albums/Kinema_tZsXbIuevE.jpg' },
+              { name: 'Dal Bhat',  culture: 'Brahmin/Chhetri',  image: 'https://media.sublimetrails.com/uploads/media/blog/dal-bhat/Dal_Bhat_from_Nepal_curry_dhal_lentils_spinach_rice_yogurt.webp' },
+              { name: 'Sel Roti',  culture: 'Brahmin/Chhetri',  image: 'https://washburnreview.org/wp-content/uploads/2023/03/sel-roti.jpeg' },
             ].map((f, i) => (
               <div key={i} className={`hp-mosaic-card hp-mosaic-card-${i + 1}`}>
                 <img src={f.image} alt={f.name} className="hp-mosaic-img" />

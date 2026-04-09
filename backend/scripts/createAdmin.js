@@ -12,10 +12,7 @@ const ADMIN_EMAIL    = process.env.ADMIN_EMAIL;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
 if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
-  console.error("❌ Missing ADMIN_EMAIL or ADMIN_PASSWORD in your .env file.");
-  console.error("   Add these two lines to backend/.env:");
-  console.error("   ADMIN_EMAIL=your@email.com");
-  console.error("   ADMIN_PASSWORD=YourStrongPassword");
+  console.error("Admin email and password missing in the .env file.");
   process.exit(1);
 }
 
@@ -33,13 +30,13 @@ async function createAdmin() {
         "UPDATE users SET password = ?, role = 'admin', name = ? WHERE email = ?",
         [hash, ADMIN_NAME, ADMIN_EMAIL]
       );
-      console.log("✅ Existing user updated to admin with new password.");
+      console.log(" Existing user updated to admin with new password.");
     } else {
       await db.execute(
         "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, 'admin')",
         [ADMIN_NAME, ADMIN_EMAIL, hash]
       );
-      console.log("✅ Admin user created!");
+      console.log("Admin user created!");
     }
 
     console.log(`\n   Login at:  http://localhost:5173/admin/login`);
@@ -47,7 +44,7 @@ async function createAdmin() {
     console.log(`   Password:  (as set in the .env)\n`);
     process.exit(0);
   } catch (err) {
-    console.error("❌ Error:", err.message);
+    console.error("Error:", err.message);
     process.exit(1);
   }
 }
