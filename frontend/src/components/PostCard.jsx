@@ -1,7 +1,10 @@
 /* eslint-disable no-unused-vars */
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { likePost, unlikePost, addComment, getComments, deletePost, getPost, updatePost } from "../api/postService";
+import {
+  likePost, unlikePost, addComment, getComments,
+  deletePost, getPost, updatePost,
+} from "../api/postService";
 import { getAvatar } from "../utils/avatar";
 import "./PostCard.css";
 
@@ -22,17 +25,11 @@ const PlayIcon = () => (
     <polygon points="5 3 19 12 5 21 5 3"/>
   </svg>
 );
-const TrashIcon = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="3 6 5 6 21 6"/>
-    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-    <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
-  </svg>
-);
-const EditIcon = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+const DotsIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+    <circle cx="12" cy="5"  r="1.5"/>
+    <circle cx="12" cy="12" r="1.5"/>
+    <circle cx="12" cy="19" r="1.5"/>
   </svg>
 );
 const ChevronDown = () => (
@@ -48,6 +45,149 @@ function CommentText({ text }) {
         part.startsWith("@") ? <span key={i} className="pcard-mention">{part}</span> : part
       )}
     </p>
+  );
+}
+
+/* ── Three-dots dropdown menu ── */
+function DotsMenu({ isOwner, onEdit, onDelete, onReport }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    if (open) document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  return (
+    <div className="pcard-dots-wrap" ref={ref}>
+      <button
+        className="pcard-dots-btn"
+        onClick={(e) => { e.stopPropagation(); setOpen(o => !o); }}
+        title="More options"
+      >
+        <DotsIcon />
+      </button>
+      {open && (
+        <div className="pcard-dots-menu">
+          {isOwner ? (
+            <>
+              <button className="pcard-dots-item" onClick={() => { setOpen(false); onEdit(); }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                Edit post
+              </button>
+              <button className="pcard-dots-item pcard-dots-danger" onClick={() => { setOpen(false); onDelete(); }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                  <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+                </svg>
+                Delete post
+              </button>
+            </>
+          ) : (
+            <button className="pcard-dots-item pcard-dots-report" onClick={() => { setOpen(false); onReport(); }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
+                <line x1="4" y1="22" x2="4" y2="15"/>
+              </svg>
+              Report post
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Report modal ── */
+const REPORT_REASONS = [
+  "Inappropriate or offensive content",
+  "Spam or misleading information",
+  "Incorrect cultural information",
+  "Harassment or hate speech",
+  "Copyright violation",
+  "Other",
+];
+
+function ReportModal({ postType, onSubmit, onCancel }) {
+  const [selected, setSelected] = useState("");
+  const [custom,   setCustom]   = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [err, setErr] = useState("");
+
+  const handleSubmit = async () => {
+    const reason = selected === "Other" ? custom.trim() : selected;
+    if (!reason) { setErr("Please select or write a reason."); return; }
+    setSubmitting(true); setErr("");
+    try {
+      await onSubmit(reason);
+    } catch {
+      setErr("Failed to submit. Please try again.");
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="pcard-modal-overlay" onClick={onCancel}>
+      <div className="pcard-report-modal" onClick={e => e.stopPropagation()}>
+        <div className="pcard-report-header">
+          <h3 className="pcard-report-title">Report {postType}</h3>
+          <button className="pcard-edit-modal-close" onClick={onCancel}>✕</button>
+        </div>
+        <p className="pcard-report-sub">Why are you reporting this content?</p>
+        {err && <p className="pcard-edit-err">{err}</p>}
+        <div className="pcard-report-reasons">
+          {REPORT_REASONS.map(r => (
+            <button
+              key={r}
+              className={`pcard-report-reason ${selected === r ? "selected" : ""}`}
+              onClick={() => { setSelected(r); setErr(""); }}
+            >
+              <span className="pcard-report-radio">{selected === r ? "●" : "○"}</span>
+              {r}
+            </button>
+          ))}
+        </div>
+        {selected === "Other" && (
+          <textarea
+            className="pcard-report-custom"
+            rows={3}
+            placeholder="Describe the issue…"
+            value={custom}
+            onChange={e => setCustom(e.target.value)}
+          />
+        )}
+        <div className="pcard-report-footer">
+          <button className="pcard-edit-cancel" onClick={onCancel}>Cancel</button>
+          <button
+            className="pcard-report-submit"
+            onClick={handleSubmit}
+            disabled={submitting}
+          >
+            {submitting ? "Submitting…" : "Submit Report"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Report success toast ── */
+function ReportToast({ onDone }) {
+  useEffect(() => {
+    const t = setTimeout(onDone, 3000);
+    return () => clearTimeout(t);
+  }, [onDone]);
+  return (
+    <div className="pcard-report-toast">
+      🛡️ Report sent to admin. Thank you for keeping the community safe.
+    </div>
   );
 }
 
@@ -70,10 +210,10 @@ function DeleteModal({ type, onConfirm, onCancel }) {
 
 /* ── Edit modal ── */
 function EditModal({ post, onSave, onCancel }) {
-  const [title, setTitle]       = useState(post.title || "");
-  const [description, setDesc]  = useState(post.description || "");
-  const [saving, setSaving]     = useState(false);
-  const [err, setErr]           = useState("");
+  const [title,       setTitle]   = useState(post.title || "");
+  const [description, setDesc]    = useState(post.description || "");
+  const [saving,      setSaving]  = useState(false);
+  const [err,         setErr]     = useState("");
 
   const handleSave = async () => {
     if (!title.trim()) { setErr("Title is required."); return; }
@@ -102,22 +242,11 @@ function EditModal({ post, onSave, onCancel }) {
         <div className="pcard-edit-fields">
           <div className="pcard-edit-field">
             <label className="pcard-edit-label">Title</label>
-            <input
-              className="pcard-edit-input"
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-              placeholder="Title"
-            />
+            <input className="pcard-edit-input" value={title} onChange={e => setTitle(e.target.value)} placeholder="Title" />
           </div>
           <div className="pcard-edit-field">
             <label className="pcard-edit-label">Description</label>
-            <textarea
-              className="pcard-edit-input pcard-edit-textarea"
-              value={description}
-              onChange={e => setDesc(e.target.value)}
-              rows={5}
-              placeholder="Description"
-            />
+            <textarea className="pcard-edit-input pcard-edit-textarea" value={description} onChange={e => setDesc(e.target.value)} rows={5} placeholder="Description" />
           </div>
         </div>
         <div className="pcard-edit-footer">
@@ -146,16 +275,10 @@ function FullRecipeOverlay({ post, fullData, loading, onClose }) {
         )}
         <div className="pcard-recipe-modal-body">
           <div className="pcard-recipe-modal-meta">
-            {post.culture_name && (
-              <span className="pcard-recipe-modal-culture">{post.culture_name}</span>
-            )}
-            {post.author_name && (
-              <span className="pcard-recipe-modal-author">by {post.author_name}</span>
-            )}
+            {post.culture_name && <span className="pcard-recipe-modal-culture">{post.culture_name}</span>}
+            {post.author_name  && <span className="pcard-recipe-modal-author">by {post.author_name}</span>}
           </div>
-          {data.description && (
-            <p className="pcard-recipe-modal-desc">{data.description}</p>
-          )}
+          {data.description && <p className="pcard-recipe-modal-desc">{data.description}</p>}
           {loading && (
             <div className="pcard-recipe-loading">
               <div className="pcard-recipe-spinner" />
@@ -167,7 +290,6 @@ function FullRecipeOverlay({ post, fullData, loading, onClose }) {
               <h4 className="pcard-recipe-modal-section-title">Ingredients</h4>
               <ul className="pcard-recipe-modal-ingredients">
                 {data.ingredients.map((ing, i) => {
-                  // API returns ingredient_text as a single string like "Potatoes: 2 cups"
                   const text = ing.ingredient_text || ing.ingredient_name || ing.name || String(ing);
                   return (
                     <li key={ing.ingredient_id || i} className="pcard-recipe-ing-item">
@@ -214,13 +336,19 @@ export default function PostCard({ post: initialPost, onLikeChange, onDelete }) 
   const [loadingFull,    setLoadingFull]    = useState(false);
   const [showDelete,     setShowDelete]     = useState(false);
   const [showEdit,       setShowEdit]       = useState(false);
+  const [showReport,     setShowReport]     = useState(false);
+  const [showToast,      setShowToast]      = useState(false);
   const [deleting,       setDeleting]       = useState(false);
+  const [deleted,        setDeleted]        = useState(false);
 
   const currentUser  = JSON.parse(localStorage.getItem("user") || "{}");
   const isOwner      = String(post.author_id) === String(currentUser.user_id);
   const desc         = post.description || "";
   const isLong       = desc.length > 300;
   const postTypeName = post.post_type === "reel" ? "reel" : "recipe";
+
+  // If deleted locally, render nothing
+  if (deleted) return null;
 
   const openFullRecipe = async () => {
     setShowFullRecipe(true);
@@ -229,13 +357,9 @@ export default function PostCard({ post: initialPost, onLikeChange, onDelete }) 
       try {
         const res     = await getPost(post.post_id);
         const fetched = res.data.data?.post || res.data.data || null;
-        console.log("[PostCard] ingredients:", fetched?.ingredients);
         setFullData(fetched);
-      } catch (err) {
-        console.error("[PostCard] getPost error:", err);
-      } finally {
-        setLoadingFull(false);
-      }
+      } catch { /* ignore */ }
+      finally { setLoadingFull(false); }
     }
   };
 
@@ -292,9 +416,21 @@ export default function PostCard({ post: initialPost, onLikeChange, onDelete }) 
     try {
       await deletePost(post.post_id);
       setShowDelete(false);
+      setDeleted(true);
       onDelete?.(post.post_id);
     } catch { /* ignore */ }
     finally { setDeleting(false); }
+  };
+
+  const handleReport = async (reason) => {
+    // dynamic import to avoid circular deps — call API directly
+    const { default: axiosInstance } = await import("../api/axiosInstance");
+    await axiosInstance.post("/reports", {
+      post_id: post.post_id,
+      reason,
+    });
+    setShowReport(false);
+    setShowToast(true);
   };
 
   const handleEditSave = (updated) => {
@@ -313,11 +449,12 @@ export default function PostCard({ post: initialPost, onLikeChange, onDelete }) 
         <EditModal post={post} onSave={handleEditSave} onCancel={() => setShowEdit(false)} />
       )}
       {showFullRecipe && (
-        <FullRecipeOverlay
-          post={post} fullData={fullData} loading={loadingFull}
-          onClose={() => setShowFullRecipe(false)}
-        />
+        <FullRecipeOverlay post={post} fullData={fullData} loading={loadingFull} onClose={() => setShowFullRecipe(false)} />
       )}
+      {showReport && (
+        <ReportModal postType={postTypeName} onSubmit={handleReport} onCancel={() => setShowReport(false)} />
+      )}
+      {showToast && <ReportToast onDone={() => setShowToast(false)} />}
 
       <article className="pcard">
         {/* ── Header ── */}
@@ -337,17 +474,12 @@ export default function PostCard({ post: initialPost, onLikeChange, onDelete }) 
               ? <span className="pcard-reel-badge">▶ Reel</span>
               : <span className="pcard-recipe-badge">📖 Recipe</span>
             }
-            {/* Edit + Delete — only visible to post owner */}
-            {isOwner && (
-              <div className="pcard-owner-actions">
-                <button className="pcard-edit-btn" onClick={() => setShowEdit(true)} title="Edit post">
-                  <EditIcon />
-                </button>
-                <button className="pcard-delete-btn" onClick={() => setShowDelete(true)} title="Delete post">
-                  <TrashIcon />
-                </button>
-              </div>
-            )}
+            <DotsMenu
+              isOwner={isOwner}
+              onEdit={() => setShowEdit(true)}
+              onDelete={() => setShowDelete(true)}
+              onReport={() => setShowReport(true)}
+            />
           </div>
         </div>
 
@@ -383,7 +515,6 @@ export default function PostCard({ post: initialPost, onLikeChange, onDelete }) 
             </button>
           )}
 
-          {/* Actions */}
           <div className="pcard-actions">
             <button className={`pcard-btn pcard-like ${liked ? "liked" : ""}`} onClick={toggleLike} disabled={liking}>
               <HeartIcon filled={liked} /><span>{likeCount}</span>
@@ -393,7 +524,6 @@ export default function PostCard({ post: initialPost, onLikeChange, onDelete }) 
             </button>
           </div>
 
-          {/* Inline comments */}
           {showComments && (
             <div className="pcard-comments">
               <div className="pcard-comments-header">

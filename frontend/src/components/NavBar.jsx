@@ -4,7 +4,30 @@ import { Link, useNavigate } from 'react-router-dom';
 import { getApprovedFoods } from '../api/foodService';
 import './NavBar.css';
 
-/* ── Avatar: profile pic or initials fallback ── */
+/* ── Culture slug map ── */
+const CULTURE_SLUGS = [
+  { terms: ['newari', 'newar', 'newa', 'नेवारी'],
+    slug: 'newari', label: 'Newari' },
+  { terms: ['brahmin', 'chhetri', 'brahmin/chhetri', 'brahmin chhetri', 'chhetry', 'ब्राह्मण'],
+    slug: 'brahmin-chhetri', label: 'Brahmin / Chhetri' },
+  { terms: ['madhesi', 'tharu', 'maithili', 'madhesh', 'मधेसी'],
+    slug: 'madhesi', label: 'Madhesi' },
+  { terms: ['janajati', 'jana jati', 'tamang', 'gurung', 'rai', 'limbu', 'sherpa', 'thakali', 'magar', 'जनजाति'],
+    slug: 'janajati', label: 'Janajati' },
+];
+
+function getCultureMatch(query) {
+  const q = query.trim().toLowerCase();
+  if (!q || q.length < 2) return null;
+  for (const entry of CULTURE_SLUGS) {
+    if (entry.terms.some(t => t.startsWith(q) || q === t || q.includes(t))) {
+      return entry;
+    }
+  }
+  return null;
+}
+
+/* ── Avatar ── */
 function Avatar({ src, name, size = 36, className = '' }) {
   const [err, setErr] = useState(false);
   const initials = (name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
@@ -22,65 +45,62 @@ function Avatar({ src, name, size = 36, className = '' }) {
 }
 
 const SearchIcon = () => (
-  <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
   </svg>
 );
 const MenuIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
   </svg>
 );
 const CloseIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
   </svg>
 );
 const ChevronIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="6 9 12 15 18 9"/>
   </svg>
 );
 const LogoutIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
     <polyline points="16 17 21 12 16 7"/>
     <line x1="21" y1="12" x2="9" y2="12"/>
   </svg>
 );
 
-/* ── Live search hook ── */
-function useLiveSearch(query) {
-  const [results, setResults] = useState([]);
+/* ── Live search hook — 200ms debounce, fires from 2 chars ── */
+function useLiveSearch(query, skip) {
+  const [results,   setResults]   = useState([]);
   const [searching, setSearching] = useState(false);
   const timerRef = useRef(null);
 
   useEffect(() => {
-    if (!query || query.trim().length < 2) {
+    const q = query?.trim();
+    if (!q || q.length < 2 || skip) {
       setResults([]);
+      setSearching(false);
+      clearTimeout(timerRef.current);
       return;
     }
     clearTimeout(timerRef.current);
     timerRef.current = setTimeout(async () => {
       setSearching(true);
       try {
-        const res = await getApprovedFoods({ search: query.trim() });
-        setResults((res.data.data.foods || []).slice(0, 7));
+        const res = await getApprovedFoods({ search: q });
+        setResults((res.data.data.foods || []).slice(0, 8));
       } catch {
         setResults([]);
       } finally {
         setSearching(false);
       }
-    }, 320);
+    }, 200);
     return () => clearTimeout(timerRef.current);
-  }, [query]);
+  }, [query, skip]);
 
-  // ✅ FIX: expose setResults
   return { results, searching, setResults };
 }
 
@@ -88,11 +108,16 @@ function useLiveSearch(query) {
 function SearchBox({ className = '' }) {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
-  const [open, setOpen] = useState(false);
+  const [open,  setOpen]  = useState(false);
   const wrapRef = useRef(null);
 
-  // ✅ FIX: get setResults from hook
-  const { results, searching, setResults } = useLiveSearch(query);
+  const trimmed      = query.trim();
+  const cultureMatch = trimmed.length >= 2 ? getCultureMatch(trimmed) : null;
+
+  // Skip food API when it's a culture query
+  const { results, searching, setResults } = useLiveSearch(query, !!cultureMatch);
+
+  const showDropdown = open && trimmed.length >= 1;
 
   useEffect(() => {
     const handler = (e) => {
@@ -102,20 +127,20 @@ function SearchBox({ className = '' }) {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const showDropdown = open && query.trim().length >= 2;
-
   const handleSelect = (food) => {
     navigate(`/food/${food.food_id}`);
-    setQuery('');
-    setOpen(false);
+    setQuery(''); setResults([]); setOpen(false);
   };
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    if (query.trim()) {
-      navigate(`/foods?q=${encodeURIComponent(query.trim())}`);
-      setOpen(false);
+    e?.preventDefault();
+    if (!trimmed) return;
+    if (cultureMatch) {
+      navigate(`/foods?category=${cultureMatch.slug}`);
+    } else {
+      navigate(`/foods?q=${encodeURIComponent(trimmed)}`);
     }
+    setQuery(''); setResults([]); setOpen(false);
   };
 
   return (
@@ -133,27 +158,49 @@ function SearchBox({ className = '' }) {
         />
         {query && (
           <button type="button" className="nav-search-clear"
-            onClick={() => { setQuery(''); setResults([]); }}>
-            ✕
-          </button>
+            onClick={() => { setQuery(''); setResults([]); setOpen(false); }}>✕</button>
         )}
         <button type="submit" className="nav-search-btn">Search</button>
       </form>
 
       {showDropdown && (
         <div className="nav-search-dropdown">
-          {searching && (
+
+          {/* Culture shortcut row */}
+          {cultureMatch && (
+            <button
+              className="nav-search-culture-row"
+              onClick={() => { navigate(`/foods?category=${cultureMatch.slug}`); setQuery(''); setOpen(false); }}
+            >
+              <span className="nav-search-culture-emoji">🍱</span>
+              <div className="nav-search-culture-body">
+                <span className="nav-search-culture-main">
+                  Browse <strong>{cultureMatch.label}</strong> foods
+                </span>
+                <span className="nav-search-culture-sub">View all dishes in this culture category</span>
+              </div>
+              <span className="nav-search-culture-arrow">→</span>
+            </button>
+          )}
+
+          {/* Food results */}
+          {!cultureMatch && searching && (
             <div className="nav-search-state">
               <span className="nav-search-spinner" />
               <span>Searching…</span>
             </div>
           )}
-          {!searching && results.length === 0 && (
+          {!cultureMatch && !searching && trimmed.length >= 2 && results.length === 0 && (
             <div className="nav-search-state nav-search-empty">
               No foods found for "<strong>{query}</strong>"
             </div>
           )}
-          {!searching && results.map(food => (
+          {!cultureMatch && !searching && trimmed.length < 2 && (
+            <div className="nav-search-state nav-search-hint">
+              Keep typing to search…
+            </div>
+          )}
+          {!cultureMatch && !searching && results.map(food => (
             <button key={food.food_id} className="nav-search-item" onClick={() => handleSelect(food)}>
               {food.image_url
                 ? <img src={food.image_url} alt={food.food_name} className="nav-search-item-img" />
@@ -170,7 +217,7 @@ function SearchBox({ className = '' }) {
               )}
             </button>
           ))}
-          {!searching && results.length > 0 && (
+          {!cultureMatch && !searching && results.length > 0 && (
             <button className="nav-search-see-all" onClick={handleSubmit}>
               See all results for "<strong>{query}</strong>" →
             </button>
@@ -250,7 +297,7 @@ export default function NavBar({ onAboutClick }) {
                     </div>
                     <div className="nav-drop-divider" />
                     <Link to="/homeUser" className="nav-drop-item" onClick={() => setDropOpen(false)}>🍽 Community Feed</Link>
-                    <Link to="/profile" className="nav-drop-item" onClick={() => setDropOpen(false)}>👤 My Profile</Link>
+                    <Link to="/profile"  className="nav-drop-item" onClick={() => setDropOpen(false)}>👤 My Profile</Link>
                     <div className="nav-drop-divider" />
                     <button className="nav-drop-item nav-drop-logout" onClick={handleLogout}><LogoutIcon /> Logout</button>
                   </div>
@@ -288,7 +335,7 @@ export default function NavBar({ onAboutClick }) {
                 </div>
               </div>
               <Link to="/homeUser" className="nav-drawer-link" onClick={() => setMobileOpen(false)}>🍽 Community Feed</Link>
-              <Link to="/profile" className="nav-drawer-link" onClick={() => setMobileOpen(false)}>👤 My Profile</Link>
+              <Link to="/profile"  className="nav-drawer-link" onClick={() => setMobileOpen(false)}>👤 My Profile</Link>
               <button className="nav-drawer-logout" onClick={handleLogout}><LogoutIcon /> Logout</button>
             </>
           ) : (

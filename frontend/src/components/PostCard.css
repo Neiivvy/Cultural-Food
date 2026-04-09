@@ -1,3 +1,5 @@
+/* ── All existing styles preserved, new styles appended ── */
+
 .pcard {
   background: #fff; border-radius: 1rem; overflow: hidden;
   border: 1px solid #e8ddd5;
@@ -18,7 +20,6 @@
 
 .pcard-header-right { display: flex; align-items: center; gap: 0.4rem; flex-shrink: 0; }
 
-/* Teal culture chip */
 .pcard-culture {
   font-size: 0.67rem; font-weight: 800; text-transform: uppercase;
   letter-spacing: 0.05em; padding: 2px 8px; border-radius: 20px;
@@ -27,18 +28,41 @@
 .pcard-reel-badge   { font-size: 0.68rem; font-weight: 800; background: #111827; color: #fff; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
 .pcard-recipe-badge { font-size: 0.68rem; font-weight: 800; background: #f3f4f6; color: #374151; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
 
-/* Owner actions: edit + delete side by side */
-.pcard-owner-actions { display: flex; align-items: center; gap: 0.2rem; }
-.pcard-edit-btn, .pcard-delete-btn {
+/* ── Three-dots button & menu ── */
+.pcard-dots-wrap { position: relative; }
+.pcard-dots-btn {
   background: none; border: none; cursor: pointer;
-  padding: 5px; border-radius: 6px;
+  color: #9c7c6a; padding: 5px; border-radius: 6px;
   display: flex; align-items: center; justify-content: center;
   transition: color 0.15s, background 0.15s;
 }
-.pcard-edit-btn   { color: #9c7c6a; }
-.pcard-edit-btn:hover   { color: #2a7d6f; background: #edf7f5; }
-.pcard-delete-btn { color: #9c7c6a; }
-.pcard-delete-btn:hover { color: #ef4444; background: #fef2f2; }
+.pcard-dots-btn:hover { color: #1a0f0f; background: #f5ede6; }
+
+.pcard-dots-menu {
+  position: absolute; top: calc(100% + 6px); right: 0;
+  background: #fff; border: 1.5px solid #e8ddd5;
+  border-radius: 10px; min-width: 170px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.12);
+  z-index: 200; overflow: hidden;
+  animation: dotsMenuIn 0.13s ease;
+}
+@keyframes dotsMenuIn {
+  from { opacity: 0; transform: translateY(-4px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+.pcard-dots-item {
+  display: flex; align-items: center; gap: 0.5rem;
+  width: 100%; padding: 0.65rem 1rem;
+  background: none; border: none; cursor: pointer;
+  font-size: 0.855rem; font-weight: 600; color: #3d2020;
+  font-family: inherit; text-align: left;
+  transition: background 0.12s;
+}
+.pcard-dots-item:hover { background: #fdf8f5; }
+.pcard-dots-danger { color: #dc2626; }
+.pcard-dots-danger:hover { background: #fef2f2; color: #dc2626; }
+.pcard-dots-report { color: #7c2d2d; }
+.pcard-dots-report:hover { background: #fdf5f0; }
 
 /* ── Media ── */
 .pcard-media      { display: block; width: 100%; aspect-ratio: 4/3; overflow: hidden; position: relative; }
@@ -96,9 +120,11 @@
 .pcard-close-cmt { background: none; border: none; cursor: pointer; font-size: 0.78rem; color: #9c7c6a; font-weight: 600; padding: 2px 6px; border-radius: 4px; transition: color 0.15s, background 0.15s; }
 .pcard-close-cmt:hover { color: #7c2d2d; background: #f9f0f0; }
 
-/* ── Delete confirm modal ── */
+/* ── Modal overlay (shared) ── */
 .pcard-modal-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; padding: 1rem; animation: fadeIn 0.15s ease; }
 @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+
+/* ── Delete modal ── */
 .pcard-modal { background: #fff; border-radius: 1.25rem; padding: 2rem 1.75rem; max-width: 360px; width: 100%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.2); animation: slideUp 0.2s ease; }
 @keyframes slideUp { from { transform: translateY(16px); opacity:0; } to { transform: translateY(0); opacity:1; } }
 .pcard-modal-icon  { font-size: 2.5rem; margin-bottom: 0.75rem; }
@@ -111,16 +137,8 @@
 .pcard-modal-confirm:hover { background: #dc2626; }
 
 /* ── Edit modal ── */
-.pcard-edit-modal {
-  background: #fff; border-radius: 1.25rem;
-  width: 100%; max-width: 480px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-  animation: slideUp 0.2s ease; overflow: hidden;
-}
-.pcard-edit-modal-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 1.1rem 1.4rem 0.9rem; border-bottom: 1px solid #f0e8e0;
-}
+.pcard-edit-modal { background: #fff; border-radius: 1.25rem; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); animation: slideUp 0.2s ease; overflow: hidden; }
+.pcard-edit-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 1.1rem 1.4rem 0.9rem; border-bottom: 1px solid #f0e8e0; }
 .pcard-edit-modal-title { font-size: 1.1rem; font-weight: 800; color: #7c2d2d; margin: 0; }
 .pcard-edit-modal-close { background: none; border: none; cursor: pointer; font-size: 1.1rem; color: #9c7c6a; padding: 2px 6px; border-radius: 6px; transition: background 0.15s; }
 .pcard-edit-modal-close:hover { background: #fdf5f0; color: #7c2d2d; }
@@ -138,6 +156,73 @@
 .pcard-edit-save:hover:not(:disabled) { background: #5c1f1f; }
 .pcard-edit-save:disabled { opacity: 0.6; cursor: not-allowed; }
 
+/* ── Report modal ── */
+.pcard-report-modal {
+  background: #fff; border-radius: 1.25rem;
+  width: 100%; max-width: 440px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  animation: slideUp 0.2s ease; overflow: hidden;
+}
+.pcard-report-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.1rem 1.4rem 0.9rem; border-bottom: 1px solid #f0e8e0;
+}
+.pcard-report-title { font-size: 1.05rem; font-weight: 800; color: #7c2d2d; margin: 0; text-transform: capitalize; }
+.pcard-report-sub   { font-size: 0.855rem; color: #6b5b5b; margin: 0.9rem 1.4rem 0.5rem; }
+.pcard-report-reasons {
+  display: flex; flex-direction: column; gap: 0.3rem;
+  padding: 0 1.4rem;
+}
+.pcard-report-reason {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.6rem 0.85rem; border-radius: 0.6rem;
+  border: 1.5px solid #e8ddd5; background: #fff;
+  font-size: 0.875rem; color: #3d2020; font-family: inherit;
+  cursor: pointer; text-align: left;
+  transition: border-color 0.15s, background 0.15s;
+}
+.pcard-report-reason:hover    { border-color: #c4a898; background: #fdf8f5; }
+.pcard-report-reason.selected { border-color: #7c2d2d; background: #fdf5f0; color: #7c2d2d; }
+.pcard-report-radio { font-size: 0.9rem; flex-shrink: 0; }
+.pcard-report-custom {
+  margin: 0.6rem 1.4rem 0;
+  width: calc(100% - 2.8rem);
+  padding: 0.6rem 0.8rem;
+  border: 1.5px solid #e0d4cc; border-radius: 0.6rem;
+  font-size: 0.875rem; font-family: inherit; color: #1a0f0f;
+  resize: vertical; outline: none; line-height: 1.5;
+  transition: border-color 0.18s;
+}
+.pcard-report-custom:focus { border-color: #7c2d2d; }
+.pcard-report-footer {
+  display: flex; gap: 0.75rem;
+  padding: 1rem 1.4rem 1.25rem;
+  border-top: 1px solid #f0e8e0; margin-top: 0.75rem;
+}
+.pcard-report-submit {
+  flex: 2; padding: 0.65rem; border: none; border-radius: 0.6rem;
+  background: #7c2d2d; color: #fff;
+  font-weight: 700; font-size: 0.9rem; cursor: pointer;
+  transition: background 0.18s;
+}
+.pcard-report-submit:hover:not(:disabled) { background: #5c1f1f; }
+.pcard-report-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ── Report success toast ── */
+.pcard-report-toast {
+  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+  background: #1a0f0f; color: #fff;
+  padding: 0.75rem 1.4rem; border-radius: 50px;
+  font-size: 0.855rem; font-weight: 600;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+  z-index: 2000; white-space: nowrap;
+  animation: toastIn 0.25s ease;
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
 /* ── Full recipe overlay ── */
 .pcard-recipe-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; padding: 1.5rem; animation: fadeIn 0.15s ease; }
 .pcard-recipe-modal { background: #fff; border-radius: 1.25rem; width: 100%; max-width: 540px; max-height: 88vh; overflow-y: auto; box-shadow: 0 24px 60px rgba(0,0,0,0.22); animation: slideUp 0.2s ease; }
@@ -151,24 +236,16 @@
 .pcard-recipe-modal-culture { display: inline-block; font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; background: #edf7f5; color: #1f6058; padding: 2px 8px; border-radius: 20px; }
 .pcard-recipe-modal-author  { font-size: 0.8rem; color: #9c7c6a; font-weight: 500; }
 .pcard-recipe-modal-desc { font-size: 0.9rem; color: #3d2020; line-height: 1.7; white-space: pre-wrap; word-break: break-word; margin-bottom: 0.5rem; }
-
-/* Loading */
 .pcard-recipe-loading { display: flex; align-items: center; gap: 0.6rem; padding: 1.25rem 0; color: #9c7c6a; font-size: 0.875rem; }
 .pcard-recipe-spinner { width: 20px; height: 20px; flex-shrink: 0; border: 2px solid #e8ddd5; border-top-color: #2a7d6f; border-radius: 50%; animation: pcard-spin 0.7s linear infinite; }
 @keyframes pcard-spin { to { transform: rotate(360deg); } }
-
-/* Sections */
 .pcard-recipe-modal-section { margin-top: 1.25rem; }
 .pcard-recipe-modal-section-title { font-family: 'Fraunces', serif; font-size: 0.95rem; font-weight: 700; color: #7c2d2d; margin: 0 0 0.6rem; padding-bottom: 0.35rem; border-bottom: 1.5px solid #f0e8e0; }
-
-/* Ingredients — ingredient_text is a full string */
 .pcard-recipe-modal-ingredients { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.3rem; }
 .pcard-recipe-ing-item { display: flex; align-items: flex-start; gap: 0.5rem; padding: 0.3rem 0; border-bottom: 1px solid #faf4f0; }
 .pcard-recipe-ing-item:last-child { border-bottom: none; }
 .pcard-recipe-ing-dot  { color: #2a7d6f; font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
 .pcard-recipe-ing-text { font-size: 0.875rem; color: #3d2020; line-height: 1.5; }
-
-/* Steps */
 .pcard-recipe-modal-steps { padding-left: 1.25rem; margin: 0; display: flex; flex-direction: column; gap: 0.65rem; }
 .pcard-recipe-modal-steps li { font-size: 0.875rem; color: #3d2020; line-height: 1.6; }
 
@@ -184,4 +261,7 @@
   .pcard-recipe-modal-header, .pcard-recipe-modal-body { padding-left: 1rem; padding-right: 1rem; }
   .pcard-edit-modal { border-radius: 1rem; }
   .pcard-edit-modal-header, .pcard-edit-fields, .pcard-edit-footer { padding-left: 1rem; padding-right: 1rem; }
+  .pcard-report-modal { border-radius: 1rem; }
+  .pcard-report-toast { font-size: 0.8rem; padding: 0.65rem 1rem; white-space: normal; text-align: center; max-width: 90vw; }
+  .pcard-dots-menu { min-width: 155px; }
 }

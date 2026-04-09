@@ -13,6 +13,7 @@ import notificationRoutes  from "./routes/notificationRoutes.js";
 import foodRoutes           from "./routes/foodRoutes.js";
 import adminRoutes          from "./routes/adminRoutes.js";
 import contributionRoutes from "./routes/contributionRoutes.js";
+import reportRoutes from "./routes/reportRoutes.js";
 
 dotenv.config();
 
@@ -41,6 +42,7 @@ app.use("/api/cultures",  cultureRoutes);
 app.use("/api/foods",     foodRoutes);
 app.use("/api/admin",     adminRoutes);
 app.use("/api/contributions", contributionRoutes);
+app.use("/api/reports", reportRoutes);
 
 // Health check
 app.get("/api/health", (_req, res) =>

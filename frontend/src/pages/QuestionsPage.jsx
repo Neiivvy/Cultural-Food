@@ -1,24 +1,11 @@
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getQuestions, createQuestion, addAnswer, deleteQuestion, deleteAnswer } from "../api/questionService";
+import { getQuestions, createQuestion } from "../api/questionService";
 import useCultures from "../hooks/useCultures";
 import CultureFilter from "../components/CultureFilter";
-import { getAvatar } from "../utils/avatar";
+import QuestionCard from "../components/QuestionCard";
 import "./QuestionsPage.css";
-
-const DESC_LIMIT = 200;
-
-function AnswerText({ text }) {
-  return (
-    <p className="qpage-ans-text">
-      {text.split(/(@\w[\w\s]*)/g).map((part, i) =>
-        part.startsWith("@")
-          ? <span key={i} className="qpage-mention">{part}</span>
-          : part
-      )}
-    </p>
-  );
-}
 
 export default function QuestionsPage() {
   const navigate = useNavigate();
@@ -37,11 +24,6 @@ export default function QuestionsPage() {
 
   const [cultureFilter, setCultureFilter] = useState("");
   const [mobileCulture, setMobileCulture] = useState(false);
-
-  const [answerText,  setAnswerText]  = useState({});
-  const [postingAns,  setPostingAns]  = useState(null);
-  const [openAnswers, setOpenAnswers] = useState({});
-  const [expanded,    setExpanded]    = useState({});
 
   const { cultures } = useCultures();
   const currentUser  = JSON.parse(localStorage.getItem("user") || "{}");
@@ -83,61 +65,12 @@ export default function QuestionsPage() {
       setAskTitle(""); setAskDesc(""); setAskCulture("");
       setShowAskForm(false);
       setSuccessMsg("Question published!");
-      setTimeout(() => { setSuccessMsg(""); navigate("/homeUser"); }, 1800);
+      setTimeout(() => setSuccessMsg(""), 2500);
     } catch (err) {
       setAskError(err.response?.data?.message || "Failed to post question.");
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const handleAnswer = async (qId) => {
-    const text = answerText[qId]?.trim();
-    if (!text || postingAns) return;
-    setPostingAns(qId);
-    try {
-      const res = await addAnswer(qId, { answer_text: text });
-      const ans = res.data.data.answer;
-      setQuestions(prev => prev.map(q =>
-        q.question_id === qId
-          ? { ...q,
-              answers: [...(q.answers || []), { ...ans,
-                author_name:     currentUser.name            || "You",
-                profile_picture: currentUser.profile_picture || null,
-              }],
-              answers_count: (Number(q.answers_count) || 0) + 1,
-            }
-          : q
-      ));
-      setAnswerText(t => ({ ...t, [qId]: "" }));
-    } catch { /* ignore */ }
-    finally { setPostingAns(null); }
-  };
-
-  const mentionUser = (qId, name) =>
-    setAnswerText(t => {
-      const prev = (t[qId] || "").trimEnd();
-      return { ...t, [qId]: prev ? `${prev} @${name} ` : `@${name} ` };
-    });
-
-  const handleDeleteQ = async (qId) => {
-    if (!window.confirm("Delete this question?")) return;
-    try {
-      await deleteQuestion(qId);
-      setQuestions(prev => prev.filter(q => q.question_id !== qId));
-    } catch { /* ignore */ }
-  };
-
-  const handleDeleteA = async (qId, aId) => {
-    if (!window.confirm("Delete this answer?")) return;
-    try {
-      await deleteAnswer(aId);
-      setQuestions(prev => prev.map(q =>
-        q.question_id === qId
-          ? { ...q, answers: (q.answers || []).filter(a => a.answer_id !== aId) }
-          : q
-      ));
-    } catch { /* ignore */ }
   };
 
   const displayed = cultureFilter
@@ -154,7 +87,7 @@ export default function QuestionsPage() {
         setCultureFilter={setCultureFilter}
       />
 
-      {/* FIXED Ask Question button — top-right corner */}
+      {/* FIXED Ask Question button */}
       <button
         className="qpage-fixed-ask-btn"
         onClick={() => { setShowAskForm(s => !s); setAskError(""); }}
@@ -166,7 +99,7 @@ export default function QuestionsPage() {
       <main className="qpage-main">
         <div className="qpage-feed-area">
 
-          {/* Static header — scrolls with page */}
+          {/* Static header */}
           <div className="qpage-feed-header">
             <div className="qpage-feed-header-left">
               <button
@@ -276,109 +209,10 @@ export default function QuestionsPage() {
               </div>
             )}
 
-            {/* Question cards */}
-            {!loading && !error && displayed.map(q => {
-              const isOwner  = String(q.user_id) === String(currentUser.user_id);
-              const isOpen   = openAnswers[q.question_id];
-              const isExpand = expanded[q.question_id];
-              const desc     = q.description || "";
-              const isLong   = desc.length > DESC_LIMIT;
-              const visDesc  = isLong && !isExpand ? desc.slice(0, DESC_LIMIT) + "…" : desc;
-
-              return (
-                <div key={q.question_id} className="qpage-card">
-                  <div className="qpage-card-header">
-                    <div className="qpage-author">
-                      <img src={getAvatar(q.profile_picture, q.author_name, 34)} alt={q.author_name} className="qpage-avatar" />
-                      <div>
-                        <span className="qpage-author-name">{q.author_name}</span>
-                        <span className="qpage-date">
-                          {new Date(q.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="qpage-card-header-right">
-                      {q.culture_name && <span className="qpage-culture-tag">{q.culture_name}</span>}
-                      {isOwner && (
-                        <button className="qpage-delete-btn" onClick={() => handleDeleteQ(q.question_id)} title="Delete question">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="3 6 5 6 21 6"/>
-                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                            <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
-                          </svg>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  <h3 className="qpage-q-title">{q.title}</h3>
-
-                  {desc && (
-                    <div className="qpage-q-desc-wrap">
-                      <p className="qpage-q-desc">{visDesc}</p>
-                      {isLong && (
-                        <button className="qpage-read-more"
-                          onClick={() => setExpanded(x => ({ ...x, [q.question_id]: !x[q.question_id] }))}>
-                          {isExpand ? "Show less" : "Read more"}
-                        </button>
-                      )}
-                    </div>
-                  )}
-
-                  <div className="qpage-footer">
-                    <span className="qpage-stat">
-                      💬 {(q.answers || []).length} answer{(q.answers || []).length !== 1 ? "s" : ""}
-                    </span>
-                    <button className="qpage-answer-btn"
-                      onClick={() => setOpenAnswers(o => ({ ...o, [q.question_id]: !o[q.question_id] }))}>
-                      {isOpen ? "Hide ↑" : "Answers →"}
-                    </button>
-                  </div>
-
-                  {isOpen && (
-                    <div className="qpage-answers">
-                      {(q.answers || []).length === 0 && (
-                        <p className="qpage-no-answers">No answers yet — be the first!</p>
-                      )}
-                      {(q.answers || []).map(a => (
-                        <div key={a.answer_id} className="qpage-answer-item">
-                          <img src={getAvatar(a.profile_picture, a.author_name, 28)} alt={a.author_name}
-                            className="qpage-ans-avatar" onClick={() => mentionUser(q.question_id, a.author_name)} style={{ cursor: "pointer" }} />
-                          <div className="qpage-ans-body">
-                            <div className="qpage-ans-top">
-                              <span className="qpage-ans-name"
-                                onClick={() => mentionUser(q.question_id, a.author_name)} style={{ cursor: "pointer" }}>
-                                {a.author_name}
-                              </span>
-                              <span className="qpage-ans-time">{new Date(a.created_at).toLocaleDateString()}</span>
-                              {String(a.user_id) === String(currentUser.user_id) && (
-                                <button className="qpage-delete-btn qpage-delete-small"
-                                  onClick={() => handleDeleteA(q.question_id, a.answer_id)}>✕</button>
-                              )}
-                            </div>
-                            <AnswerText text={a.answer_text} />
-                          </div>
-                        </div>
-                      ))}
-                      <div className="qpage-ans-form">
-                        <input type="text" className="qpage-ans-input"
-                          value={answerText[q.question_id] || ""}
-                          onChange={e => setAnswerText(t => ({ ...t, [q.question_id]: e.target.value }))}
-                          placeholder="Write your answer…"
-                          disabled={postingAns === q.question_id}
-                          onKeyDown={e => e.key === "Enter" && handleAnswer(q.question_id)}
-                        />
-                        <button className="qpage-ans-submit"
-                          onClick={() => handleAnswer(q.question_id)}
-                          disabled={postingAns === q.question_id}>
-                          {postingAns === q.question_id ? "…" : "Post"}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+            {/* Use QuestionCard component — has three-dots, edit, delete, report built in */}
+            {!loading && !error && displayed.map(q => (
+              <QuestionCard key={q.question_id} question={q} />
+            ))}
           </div>
         </div>
       </main>

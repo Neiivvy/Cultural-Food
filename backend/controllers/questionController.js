@@ -62,4 +62,18 @@ export const deleteQuestion = async (req, res) => {
     console.error("deleteQuestion error:", err);
     return res.status(500).json({ success: false, message: "Server error." });
   }
+
+};
+
+export const updateQuestion = async (req, res) => {
+  try {
+    const { title, description } = req.body;
+    if (!title?.trim()) return res.status(400).json({ success: false, message: "Title is required." });
+    const result = await Question.update(req.params.id, req.user.userId, { title: title.trim(), description: description?.trim() });
+    if (result.notFound)  return res.status(404).json({ success: false, message: "Question not found." });
+    if (result.forbidden) return res.status(403).json({ success: false, message: "Not your question." });
+    res.json({ success: true, message: "Question updated." });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Server error." });
+  }
 };

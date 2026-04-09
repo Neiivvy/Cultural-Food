@@ -37,6 +37,22 @@ const Question = {
   delete: async (questionId) => {
     await db.execute("DELETE FROM questions WHERE question_id = ?", [questionId]);
   },
+
+  update: async (questionId, userId, { title, description }) => {
+  // Verify ownership before updating
+  const [rows] = await db.execute(
+    "SELECT user_id FROM questions WHERE question_id = ? LIMIT 1",
+    [questionId]
+  );
+  if (!rows[0]) return { notFound: true };
+  if (String(rows[0].user_id) !== String(userId)) return { forbidden: true };
+
+  await db.execute(
+    "UPDATE questions SET title = ?, description = ? WHERE question_id = ?",
+    [title, description || null, questionId]
+  );
+  return { ok: true };
+},
 };
 
 export default Question;

@@ -4,7 +4,7 @@
 .uhome {
   display: flex;
   min-height: 100vh;
-  background: #fff2ea;
+  background: white;
   font-family: "DM Sans", sans-serif;
 }
 
@@ -42,7 +42,7 @@
 
 
   /* FIX: removed white gap look */
-  background:#fff2ea;
+ 
 
 }
 

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { loginUser } from '../api/authService';
 import './Login.css';
 
 export default function Login() {
+  const location = useLocation();
   const navigate = useNavigate();
   const [formData,    setFormData]    = useState({ email: '', password: '' });
   const [errors,      setErrors]      = useState({});
@@ -59,7 +60,8 @@ export default function Login() {
         sessionStorage.removeItem('redirectAfterAuth');
         navigate(redirect);
       } else {
-        navigate('/homeUser');
+      const from = location.state?.from || '/homeUser';
+navigate(from, { replace: true });
       }
     } catch (err) {
       setServerError(

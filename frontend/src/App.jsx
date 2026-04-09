@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
 // Public pages
 import HomePage             from './pages/HomePage';
@@ -31,6 +31,15 @@ import UserNavBar           from './components/UserNavBar';
 
 import './App.css';
 
+// ── Scroll to top on every route change ──────────────────────────
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [pathname]);
+  return null;
+}
+
 // ── Auth guard ────────────────────────────────────────────────────
 const PrivateRoute = ({ children }) => {
   const token = localStorage.getItem('token');
@@ -48,6 +57,7 @@ const UserLayout = ({ children }) => (
 function App() {
   return (
     <Router>
+      <ScrollToTop />
       <div className="app">
         <Routes>
 
@@ -57,6 +67,9 @@ function App() {
           <Route path="/login"                element={<Login />} />
           <Route path="/signup"               element={<Signup />} />
           <Route path="/contribute"           element={<ContributePage />} />
+
+          {/* /foods redirects to food category page */}
+          <Route path="/foods"                element={<FoodCategoryPage />} />
           <Route path="/category/:categoryId" element={<FoodCategoryPage />} />
 
           {/* Contribute form — protected */}

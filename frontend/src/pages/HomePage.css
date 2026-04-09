@@ -414,3 +414,17 @@
   .hp-footer-bottom   { flex-direction: column; text-align: center; padding: 1rem 1.25rem; }
   .hp-section-header  { margin-bottom: 2.5rem; }
 }
+/* ── ADD TO BOTTOM OF HomePage.css ── */
+
+/* Display-only info cards in About section — no cursor, no nav arrow shown */
+.hp-action-card-display {
+  cursor: default !important;
+  pointer-events: none;
+  text-decoration: none !important;
+}
+.hp-action-card-display .hp-action-arrow { display: none; }
+.hp-action-card-display:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  border-color: #e8ddd5 !important;
+}

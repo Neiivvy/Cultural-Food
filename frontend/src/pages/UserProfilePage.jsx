@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getProfile, updateProfile }    from "../api/userService";
+import { getProfile }                    from "../api/userService";
 import { getFeed }                       from "../api/postService";
 import { getQuestions }                  from "../api/questionService";
 import { getAvatar }                     from "../utils/avatar";
@@ -24,15 +24,19 @@ export default function UserProfilePage() {
   const [myAnswers,     setMyAnswers]     = useState([]);
   const [contributions, setContributions] = useState([]);
   const [activeTab,     setActiveTab]     = useState("recipes");
-  const [editing,       setEditing]       = useState(false);
-  const [editName,      setEditName]      = useState("");
-  const [editBio,       setEditBio]       = useState("");
-  const [picFile,       setPicFile]       = useState(null);
-  const [picPreview,    setPicPreview]    = useState(null);
-  const [saving,        setSaving]        = useState(false);
   const [loading,       setLoading]       = useState(true);
 
   const stored = JSON.parse(localStorage.getItem("user") || "{}");
+
+  // Listen for profile updates from the UserNavBar's Manage Profile overlay
+  useEffect(() => {
+    const handler = (e) => {
+      const updated = e.detail || JSON.parse(localStorage.getItem("user") || "{}");
+      setUser(prev => prev ? { ...prev, ...updated } : updated);
+    };
+    window.addEventListener("profile-updated", handler);
+    return () => window.removeEventListener("profile-updated", handler);
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -45,8 +49,6 @@ export default function UserProfilePage() {
 
         const u = profileRes.data.data.user;
         setUser(u);
-        setEditName(u.name);
-        setEditBio(u.bio || "");
         setMyPosts(myPostsRes.data.data.posts || []);
 
         const allQs = allQsRes.data.data.questions || [];
@@ -74,39 +76,12 @@ export default function UserProfilePage() {
       .catch(() => {});
   }, [stored.user_id]);
 
-  const handlePicChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setPicFile(file);
-    const reader = new FileReader();
-    reader.onload  = ev => setPicPreview(ev.target.result);
-    reader.readAsDataURL(file);
-  };
-
-  const saveProfile = async () => {
-    setSaving(true);
-    try {
-      const fd = new FormData();
-      fd.append("name", editName.trim());
-      fd.append("bio",  editBio.trim());
-      if (picFile) fd.append("profile_picture", picFile);
-      const res     = await updateProfile(stored.user_id, fd);
-      const updated = res.data.data.user;
-      setUser(updated);
-      const merged = { ...stored, ...updated };
-      localStorage.setItem("user", JSON.stringify(merged));
-      window.dispatchEvent(new CustomEvent("profile-updated", { detail: merged }));
-      setEditing(false); setPicFile(null); setPicPreview(null);
-    } catch { /* ignore */ }
-    finally { setSaving(false); }
-  };
-
   if (loading) return <div className="uprofile-page"><p className="uprofile-loading">Loading…</p></div>;
   if (!user)   return <div className="uprofile-page"><p className="uprofile-loading">Could not load profile.</p></div>;
 
   const myRecipes = myPosts.filter(p => p.post_type === "recipe");
   const myReels   = myPosts.filter(p => p.post_type === "reel");
-  const avatarSrc = picPreview || getAvatar(user.profile_picture, user.name, 120);
+  const avatarSrc = getAvatar(user.profile_picture, user.name, 120);
 
   const renderTab = () => {
     switch (activeTab) {
@@ -126,11 +101,7 @@ export default function UserProfilePage() {
           : (
             <div className="uprofile-qlist">
               {myQs.map(q => (
-                <div
-                  key={q.question_id}
-                  className="uprofile-qitem"
-                  onClick={() => navigate("/questions")}
-                >
+                <div key={q.question_id} className="uprofile-qitem" onClick={() => navigate("/questions")}>
                   <h4 className="uprofile-qtitle">{q.title}</h4>
                   {q.description && <p className="uprofile-qdesc">{q.description}</p>}
                   <div className="uprofile-qmeta">
@@ -149,11 +120,7 @@ export default function UserProfilePage() {
           : (
             <div className="uprofile-qlist">
               {myAnswers.map(a => (
-                <div
-                  key={a.answer_id}
-                  className="uprofile-qitem"
-                  onClick={() => navigate("/questions")}
-                >
+                <div key={a.answer_id} className="uprofile-qitem" onClick={() => navigate("/questions")}>
                   <p className="uprofile-ans-q">Re: <em>{a.questionTitle}</em></p>
                   <p className="uprofile-ans-text">{a.answer_text}</p>
                   <span className="uprofile-qdate">{new Date(a.created_at).toLocaleDateString()}</span>
@@ -179,14 +146,10 @@ export default function UserProfilePage() {
                   <div className="uprof-contrib-body">
                     <div className="uprof-contrib-name">
                       {c.food_name}
-                      {c.food_name_nepali && (
-                        <span className="uprof-contrib-nepali"> · {c.food_name_nepali}</span>
-                      )}
+                      {c.food_name_nepali && <span className="uprof-contrib-nepali"> · {c.food_name_nepali}</span>}
                     </div>
                     <div className="uprof-contrib-meta">
-                      {c.culture_name && (
-                        <span className="uprof-contrib-chip">{c.culture_name}</span>
-                      )}
+                      {c.culture_name && <span className="uprof-contrib-chip">{c.culture_name}</span>}
                       <span className={`uprof-contrib-status uprof-status-${c.status}`}>
                         {c.status === "pending"  && "⏳ Pending Review"}
                         {c.status === "approved" && "✓ Approved & Live"}
@@ -197,20 +160,15 @@ export default function UserProfilePage() {
                       <div className={`uprof-contrib-msg uprof-msg-${c.status}`}>
                         <span className="uprof-contrib-msg-label">
                           {c.status === "approved" ? "✓ Admin:" : "⚠ Reason:"}
-                        </span>{" "}
-                        {c.admin_message}
+                        </span>{" "}{c.admin_message}
                       </div>
                     )}
                     <div className="uprof-contrib-date">
                       Submitted{" "}
-                      {new Date(c.created_at).toLocaleDateString("en-US", {
-                        year: "numeric", month: "short", day: "numeric",
-                      })}
+                      {new Date(c.created_at).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
                       {c.reviewed_at && (
                         <> · Reviewed{" "}
-                          {new Date(c.reviewed_at).toLocaleDateString("en-US", {
-                            year: "numeric", month: "short", day: "numeric",
-                          })}
+                          {new Date(c.reviewed_at).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
                         </>
                       )}
                     </div>
@@ -229,51 +187,19 @@ export default function UserProfilePage() {
     <div className="uprofile-page">
       <div className="uprofile-container">
 
-        {/* Profile header */}
+        {/* Profile header — no edit button here; editing is via navbar Manage Profile */}
         <div className="uprofile-header">
           <div className="uprofile-avatar-wrap">
             <img src={avatarSrc} alt="avatar" className="uprofile-avatar" />
-            {editing && (
-              <label className="uprofile-avatar-edit" title="Change photo">
-                ✎
-                <input type="file" accept="image/*" onChange={handlePicChange} style={{ display: "none" }} />
-              </label>
-            )}
           </div>
 
           <div className="uprofile-info">
             <div className="uprofile-name-row">
-              {editing
-                ? <input className="uprofile-name-input" value={editName} onChange={e => setEditName(e.target.value)} />
-                : <h2 className="uprofile-name">{user.name}</h2>
-              }
-              {editing ? (
-                <div className="uprofile-edit-actions">
-                  <button className="uprofile-save-btn" onClick={saveProfile} disabled={saving}>
-                    {saving ? "Saving…" : "Save"}
-                  </button>
-                  <button className="uprofile-cancel-btn" onClick={() => {
-                    setEditing(false); setEditName(user.name);
-                    setEditBio(user.bio || ""); setPicPreview(null); setPicFile(null);
-                  }}>Cancel</button>
-                </div>
-              ) : (
-                <button className="uprofile-edit-btn" onClick={() => setEditing(true)}>✎ Edit Profile</button>
-              )}
+              <h2 className="uprofile-name">{user.name}</h2>
             </div>
 
             <p className="uprofile-email">{user.email}</p>
-
-            {editing
-              ? <textarea
-                  className="uprofile-bio-edit"
-                  value={editBio}
-                  onChange={e => setEditBio(e.target.value)}
-                  rows={3}
-                  placeholder="Write something about yourself…"
-                />
-              : <p className="uprofile-bio">{user.bio || "No bio yet."}</p>
-            }
+            <p className="uprofile-bio">{user.bio || "No bio yet."}</p>
 
             <div className="uprofile-stats">
               <div className="uprofile-stat">
