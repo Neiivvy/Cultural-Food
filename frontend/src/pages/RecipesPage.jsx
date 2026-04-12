@@ -14,21 +14,29 @@ export default function RecipesPage() {
   const [mobileCulture, setMobileCulture] = useState(false);
   const { cultures } = useCultures();
 
-  const load = useCallback(async () => {
-    setLoading(true); setError("");
-    try {
-      const params = {};
-      if (typeFilter !== "all") params.type = typeFilter;
-      if (cultureFilter) params.culture_id = cultureFilter;
-      const res = await getFeed(params);
-      const all = res.data.data.posts || [];
-      setPosts(all.filter(p => p.post_type === "recipe" || p.post_type === "reel"));
-    } catch {
-      setError("Could not load posts.");
-    } finally {
-      setLoading(false);
+const load = useCallback(async () => {
+  setLoading(true); setError("");
+  try {
+    const params = {};
+    if (typeFilter === "all") {
+      params.types = "recipe,reel";
+    } else {
+      params.type = typeFilter;
     }
-  }, [typeFilter, cultureFilter]);
+    if (cultureFilter) params.culture_id = cultureFilter;
+
+    console.log("PARAMS SENT:", params);
+    const res = await getFeed(params);
+    console.log("RAW API RESPONSE:", res.data.data.posts?.map(p => ({
+      id: p.post_id, type: p.post_type, likes: p.likes_count, comments: p.comments_count
+    })));
+    setPosts(res.data.data.posts || []);
+  } catch {
+    setError("Could not load posts.");
+  } finally {
+    setLoading(false);
+  }
+}, [typeFilter, cultureFilter]);
 
   useEffect(() => { load(); }, [load]);
 

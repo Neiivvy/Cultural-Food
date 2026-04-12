@@ -63,15 +63,23 @@ export default function UserHomePage() {
     );
   };
 
-  const merged =
-    typeFilter === "all"
-      ? [
-          ...posts.map(p => ({ ...p, _kind: "post" })),
-          ...questions.map(q => ({ ...q, _kind: "question" })),
-        ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-      : typeFilter === "question"
-      ? questions.map(q => ({ ...q, _kind: "question" }))
-      : posts.map(p => ({ ...p, _kind: "post" }));
+const merged =
+  typeFilter === "all"
+    ? [
+        ...posts.map(p => ({
+          ...p,
+          _kind: "post",
+          _score: Number(p.likes_count || 0) + Number(p.comments_count || 0),
+        })),
+        ...questions.map(q => ({
+          ...q,
+          _kind: "question",
+          _score: Number(q.answers_count || 0),
+        })),
+      ].sort((a, b) => b._score - a._score || new Date(b.created_at) - new Date(a.created_at))
+    : typeFilter === "question"
+    ? questions.map(q => ({ ...q, _kind: "question" }))
+    : posts.map(p => ({ ...p, _kind: "post" }));
 
   return (
     <div className="uhome">

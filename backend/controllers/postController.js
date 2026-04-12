@@ -10,11 +10,22 @@ export const getFeed = async (req, res) => {
     const offset    = Number(req.query.offset)   || 0;
     const cultureId = req.query.culture_id || null;
     const type      = req.query.type       || null;
-    const userId    = req.query.user_id     || null;
+    const types     = req.query.types      || null; // ← add this
+    const userId    = req.query.user_id    || null;
 
-    const posts = await Post.getFeed({ limit, offset, cultureId, type, userId });
 
-    // If user is authenticated, flag which posts they have liked
+   console.log("QUERY PARAMS:", { limit, offset, cultureId, type, types, userId }); // ← add
+
+    const posts = await Post.getFeed({ limit, offset, cultureId, type, types, userId });
+
+    console.log("POSTS FROM DB:", posts.map(p => ({  // ← add
+      id: p.post_id,
+      type: p.post_type,
+      likes: p.likes_count,
+      comments: p.comments_count,
+      score: Number(p.likes_count) + Number(p.comments_count)
+    })));
+
     const authUserId = req.user?.userId;
     let likedSet = new Set();
     if (authUserId) {
@@ -36,7 +47,6 @@ export const getFeed = async (req, res) => {
     return res.status(500).json({ success: false, message: "Server error." });
   }
 };
-
 // GET /api/posts/:id
 export const getPost = async (req, res) => {
   try {

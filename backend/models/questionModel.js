@@ -13,7 +13,7 @@ const Question = {
        LEFT JOIN answers a  ON q.question_id = a.question_id
        GROUP BY q.question_id, q.title, q.description, q.culture_id, q.created_at,
                 u.user_id, u.name, u.profile_picture, c.culture_name
-       ORDER BY q.created_at DESC`
+       ORDER BY COUNT(DISTINCT a.answer_id) DESC, q.created_at DESC`
     );
     return rows;
   },
@@ -39,20 +39,19 @@ const Question = {
   },
 
   update: async (questionId, userId, { title, description }) => {
-  // Verify ownership before updating
-  const [rows] = await db.execute(
-    "SELECT user_id FROM questions WHERE question_id = ? LIMIT 1",
-    [questionId]
-  );
-  if (!rows[0]) return { notFound: true };
-  if (String(rows[0].user_id) !== String(userId)) return { forbidden: true };
+    const [rows] = await db.execute(
+      "SELECT user_id FROM questions WHERE question_id = ? LIMIT 1",
+      [questionId]
+    );
+    if (!rows[0]) return { notFound: true };
+    if (String(rows[0].user_id) !== String(userId)) return { forbidden: true };
 
-  await db.execute(
-    "UPDATE questions SET title = ?, description = ? WHERE question_id = ?",
-    [title, description || null, questionId]
-  );
-  return { ok: true };
-},
+    await db.execute(
+      "UPDATE questions SET title = ?, description = ? WHERE question_id = ?",
+      [title, description || null, questionId]
+    );
+    return { ok: true };
+  },
 };
 
 export default Question;
