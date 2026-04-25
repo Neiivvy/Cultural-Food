@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { getApprovedFoods } from '../api/foodService';
 import './NavBar.css';
 
@@ -114,7 +114,6 @@ function SearchBox({ className = '' }) {
   const trimmed      = query.trim();
   const cultureMatch = trimmed.length >= 2 ? getCultureMatch(trimmed) : null;
 
-  // Skip food API when it's a culture query
   const { results, searching, setResults } = useLiveSearch(query, !!cultureMatch);
 
   const showDropdown = open && trimmed.length >= 1;
@@ -165,8 +164,6 @@ function SearchBox({ className = '' }) {
 
       {showDropdown && (
         <div className="nav-search-dropdown">
-
-          {/* Culture shortcut row */}
           {cultureMatch && (
             <button
               className="nav-search-culture-row"
@@ -183,7 +180,6 @@ function SearchBox({ className = '' }) {
             </button>
           )}
 
-          {/* Food results */}
           {!cultureMatch && searching && (
             <div className="nav-search-state">
               <span className="nav-search-spinner" />
@@ -230,6 +226,7 @@ function SearchBox({ className = '' }) {
 
 export default function NavBar({ onAboutClick }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dropOpen,   setDropOpen]   = useState(false);
   const [user,       setUser]       = useState(() => JSON.parse(localStorage.getItem('user') || 'null'));
@@ -237,6 +234,21 @@ export default function NavBar({ onAboutClick }) {
 
   const token      = localStorage.getItem('token');
   const isLoggedIn = !!token && !!user;
+
+  // ── About Us handler ──────────────────────────────────────────
+  const handleAboutClick = (e) => {
+    e?.preventDefault();
+    const isHome = location.pathname === '/';
+    if (isHome && onAboutClick) {
+      onAboutClick(e);
+    } else {
+      navigate('/#about');
+      // Small delay to let the page load before scrolling
+      setTimeout(() => {
+        document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+  };
 
   useEffect(() => {
     const handler = (e) => {
@@ -254,6 +266,15 @@ export default function NavBar({ onAboutClick }) {
     if (dropOpen) document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [dropOpen]);
+
+  // ── Scroll to #about after navigating to homepage ─────────────
+  useEffect(() => {
+    if (location.pathname === '/' && location.hash === '#about') {
+      setTimeout(() => {
+        document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+  }, [location]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -277,7 +298,7 @@ export default function NavBar({ onAboutClick }) {
           <SearchBox />
 
           <div className="nav-right">
-            <a href="#about" className="nav-link" onClick={onAboutClick || undefined}>About Us</a>
+            <a href="#about" className="nav-link" onClick={handleAboutClick}>About Us</a>
             <Link to="/contribute" className="nav-contribute">✦ Contribute</Link>
 
             {isLoggedIn ? (
@@ -323,7 +344,7 @@ export default function NavBar({ onAboutClick }) {
 
       {mobileOpen && (
         <div className="nav-drawer">
-          <a href="#about" className="nav-drawer-link" onClick={(e) => { onAboutClick?.(e); setMobileOpen(false); }}>About Us</a>
+          <a href="#about" className="nav-drawer-link" onClick={(e) => { handleAboutClick(e); setMobileOpen(false); }}>About Us</a>
           <Link to="/contribute" className="nav-drawer-link nav-drawer-contribute" onClick={() => setMobileOpen(false)}>✦ Contribute a Food</Link>
           {isLoggedIn ? (
             <>
@@ -340,8 +361,8 @@ export default function NavBar({ onAboutClick }) {
             </>
           ) : (
             <div className="nav-drawer-auth">
-              <Link to="/login"  className="nav-drawer-login"  onClick={() => setMobileOpen(false)}>Login</Link>
-              <Link to="/signup" className="nav-drawer-signup" onClick={() => setMobileOpen(false)}>Sign Up</Link>
+              <Link to="/login"  className="nav-drawer-link nav-drawer-login"  onClick={() => setMobileOpen(false)}>Login</Link>
+              <Link to="/signup" className="nav-drawer-link nav-drawer-signup" onClick={() => setMobileOpen(false)}>Sign Up</Link>
             </div>
           )}
         </div>
