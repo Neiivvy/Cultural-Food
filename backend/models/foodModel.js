@@ -75,11 +75,10 @@ const Food = {
     }
 
     // Text search
-  if (search) {
-    where.push("(f.food_name LIKE ? OR c.culture_name LIKE ? OR f.food_name_nepali LIKE ?)");
-     params.push(`%${search}%`, `%${search}%`, `%${search}%`);
-   }
-
+if (search) {
+    q += ` AND (f.food_name LIKE ? OR c.culture_name LIKE ? OR f.food_name_nepali LIKE ?)`;
+    params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+  }
     // Veg status
     if (veg_status) {
       q += ` AND f.veg_status = ?`;
