@@ -1,3 +1,6 @@
+/* ════════════════════════════════════════════════════════════════
+   UserNavBar.css  — full file (existing styles + new additions)
+   ════════════════════════════════════════════════════════════════ */
 :root {
   --maroon:       #7c2d2d;
   --maroon-dark:  #5c1f1f;
@@ -26,13 +29,11 @@
   display: flex; align-items: center; gap: 1rem;
 }
 
-/* Brand — no icon, just text */
 .unav-brand { display: flex; align-items: center; text-decoration: none; flex-shrink: 0; }
 .unav-brand-text { font-family: 'Fraunces', serif; font-size: 1.15rem; white-space: nowrap; }
 .unav-brand-k { color: var(--maroon); font-weight: 800; }
 .unav-brand-s { color: var(--teal-dark); font-weight: 700; }
 
-/* Links */
 .unav-links { display: none; align-items: center; gap: 0.1rem; margin: 0 auto; }
 .unav-link {
   display: flex; align-items: center; gap: 0.4rem;
@@ -43,18 +44,6 @@
 .unav-link:hover  { background: var(--maroon-light); color: var(--maroon); }
 .unav-link.active { background: var(--maroon-light); color: var(--maroon); }
 
-/* Notification badge on the My Profile link */
-.unav-link-icon-wrap { position: relative; display: inline-flex; }
-.unav-link-badge {
-  position: absolute; top: -5px; right: -6px;
-  min-width: 15px; height: 15px; padding: 0 3px;
-  background: var(--maroon); color: #fff;
-  border-radius: 20px; font-size: 0.58rem; font-weight: 800;
-  display: flex; align-items: center; justify-content: center;
-  border: 1.5px solid var(--nav-bg); pointer-events: none;
-}
-
-/* Right side */
 .unav-right { display: none; align-items: center; gap: 0.65rem; flex-shrink: 0; }
 
 .unav-post-btn {
@@ -67,7 +56,6 @@
 }
 .unav-post-btn:hover { background: var(--maroon-dark); box-shadow: 0 4px 16px rgba(124,45,45,0.4); }
 
-/* Avatar button */
 .unav-avatar-wrap { position: relative; }
 .unav-avatar-btn {
   display: flex; align-items: center; gap: 0.3rem;
@@ -79,24 +67,12 @@
 .unav-avatar-ring { position: relative; display: inline-flex; }
 .unav-avatar-img  { border-radius: 50%; object-fit: cover; }
 
-/* Initials fallback */
 .unav-initials {
   display: inline-flex; align-items: center; justify-content: center;
   border-radius: 50%; background: var(--maroon); color: #fff;
   font-weight: 800; font-family: 'DM Sans', sans-serif; flex-shrink: 0;
 }
 
-/* Badge on avatar */
-.unav-badge {
-  position: absolute; top: -5px; right: -5px;
-  min-width: 16px; height: 16px; padding: 0 3px;
-  background: var(--maroon); color: #fff; border-radius: 20px;
-  font-size: 0.6rem; font-weight: 800;
-  display: flex; align-items: center; justify-content: center;
-  border: 1.5px solid #fff; pointer-events: none;
-}
-
-/* Dropdown */
 .unav-dropdown {
   position: absolute; top: calc(100% + 10px); right: 0;
   width: 210px; background: #fff;
@@ -125,7 +101,6 @@
 .unav-drop-logout      { color: #c0392b; }
 .unav-drop-logout:hover{ background: #fef2f2; }
 
-/* Show desktop at 768+ */
 @media (min-width: 768px) {
   .unav-links { display: flex; }
   .unav-right { display: flex; }
@@ -154,7 +129,6 @@
 .unav-mob-icon-wrap   { position: relative; display: inline-flex; }
 .unav-mob-label       { font-size: 0.62rem; font-weight: 700; }
 .unav-mob-avatar      { border-radius: 50%; object-fit: cover; }
-
 .unav-mob-add {
   background: var(--maroon); color: #fff !important;
   border-radius: 50%; width: 46px; height: 46px; min-width: 46px;
@@ -172,10 +146,49 @@
   display: flex; align-items: center; justify-content: center;
   border: 1.5px solid #fff;
 }
-
 @media (max-width: 767px) {
   .unav     { display: none; }
   .unav-mob { display: flex; }
+}
+
+/* ══ NOTIFICATION ══ */
+.unav-notif-btn {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  width: 38px; height: 38px;
+  background: none; border: 2px solid var(--nav-border);
+  border-radius: 50%; color: #4a3030; cursor: pointer;
+  transition: border-color 0.18s, color 0.18s, background 0.18s; flex-shrink: 0;
+}
+.unav-notif-btn:hover, .unav-notif-btn.active {
+  border-color: var(--maroon); color: var(--maroon); background: var(--maroon-light);
+}
+.unav-notif-badge {
+  position: absolute; top: -4px; right: -4px;
+  min-width: 16px; height: 16px; padding: 0 3px;
+  background: var(--maroon); color: #fff;
+  border-radius: 20px; font-size: 0.6rem; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  border: 1.5px solid #fff; pointer-events: none;
+}
+.unav-notif-backdrop {
+  position: fixed; inset: 0; z-index: 250;
+  background: rgba(26,15,15,0.25); animation: fadeIn 0.15s ease;
+}
+.unav-notif-aside {
+  position: fixed; top: var(--nav-h); right: 0; bottom: 0;
+  width: 360px; max-width: 92vw; z-index: 260;
+  background: #fff; border-left: 1.5px solid var(--nav-border);
+  box-shadow: -6px 0 32px rgba(0,0,0,0.1);
+  overflow-y: auto; animation: slideInRight 0.22s ease;
+}
+@keyframes slideInRight {
+  from { transform: translateX(24px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+@media (max-width: 767px) {
+  .unav-notif-aside { top: 0; bottom: var(--mob-nav-h); width: 100%; max-width: 100%; border-left: none; }
 }
 
 /* ══ MANAGE PROFILE OVERLAY ══ */
@@ -183,27 +196,21 @@
   position: fixed; inset: 0; z-index: 500;
   background: rgba(0,0,0,0.45);
   display: flex; align-items: center; justify-content: center;
-  padding: 1rem;
-  animation: fadeIn 0.15s ease;
+  padding: 1rem; animation: fadeIn 0.15s ease;
 }
-@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
-
 .mpo-modal {
   background: #fff; border-radius: 1.25rem;
   width: 100%; max-width: 420px;
   box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-  animation: slideUp 0.2s ease;
-  overflow: hidden;
+  animation: slideUp 0.2s ease; overflow: hidden;
 }
 @keyframes slideUp {
   from { transform: translateY(16px); opacity:0; }
   to   { transform: translateY(0);    opacity:1; }
 }
-
 .mpo-header {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 1.1rem 1.4rem 0.9rem;
-  border-bottom: 1px solid #f0e8e0;
+  padding: 1.1rem 1.4rem 0.9rem; border-bottom: 1px solid #f0e8e0;
 }
 .mpo-title { font-size: 1.1rem; font-weight: 800; color: var(--maroon); margin: 0; }
 .mpo-close {
@@ -212,8 +219,6 @@
   transition: background 0.15s, color 0.15s;
 }
 .mpo-close:hover { background: #fdf5f0; color: var(--maroon); }
-
-/* Avatar section */
 .mpo-avatar-section {
   display: flex; flex-direction: column; align-items: center;
   padding: 1.4rem 1.4rem 0.5rem;
@@ -225,14 +230,11 @@
 .mpo-avatar-wrap:hover .mpo-camera-overlay { opacity: 1; }
 .mpo-avatar-img { border-radius: 50%; object-fit: cover; display: block; }
 .mpo-camera-overlay {
-  position: absolute; inset: 0;
-  background: rgba(0,0,0,0.45);
+  position: absolute; inset: 0; background: rgba(0,0,0,0.45);
   display: flex; align-items: center; justify-content: center;
   color: #fff; opacity: 0; transition: opacity 0.18s;
 }
 .mpo-avatar-hint { font-size: 0.75rem; color: #9c7c6a; margin-top: 0.5rem; }
-
-/* Fields */
 .mpo-fields { padding: 0.5rem 1.4rem 1rem; display: flex; flex-direction: column; gap: 0.85rem; }
 .mpo-field  { display: flex; flex-direction: column; gap: 0.3rem; }
 .mpo-label  { font-size: 0.82rem; font-weight: 700; color: #4a3030; }
@@ -243,104 +245,49 @@
   font-family: inherit; resize: vertical;
 }
 .mpo-input:focus, .mpo-textarea:focus {
-  border-color: var(--maroon);
-  box-shadow: 0 0 0 3px rgba(124,45,45,0.1);
+  border-color: var(--maroon); box-shadow: 0 0 0 3px rgba(124,45,45,0.1);
 }
 .mpo-error { font-size: 0.82rem; color: #c0392b; font-weight: 500; margin: 0; }
 
-/* Footer */
+/* ── Public / Private toggle ── */
+.mpo-visibility-toggle {
+  display: flex; gap: 0.5rem;
+}
+.mpo-vis-btn {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+  padding: 0.55rem 0.75rem;
+  border: 1.5px solid #e0d4cc; border-radius: 0.55rem;
+  background: #fff; color: #5a3a3a;
+  font-family: inherit; font-size: 0.845rem; font-weight: 600;
+  cursor: pointer; transition: all 0.18s;
+}
+.mpo-vis-btn:hover { border-color: #b0a090; background: #fdf8f5; }
+.mpo-vis-btn.active {
+  border-color: var(--teal); background: var(--teal-light);
+  color: var(--teal-dark); font-weight: 700;
+}
+.mpo-vis-hint {
+  font-size: 0.75rem; color: #9c7c6a; margin: 0.2rem 0 0; line-height: 1.45;
+}
+
 .mpo-footer {
-  display: flex; gap: 0.75rem;
-  padding: 0.9rem 1.4rem 1.2rem;
-  border-top: 1px solid #f0e8e0;
+  display: flex; gap: 0.75rem; padding: 0.9rem 1.4rem 1.2rem; border-top: 1px solid #f0e8e0;
 }
 .mpo-cancel {
   flex: 1; padding: 0.65rem; border: 1.5px solid #e0d4cc;
   border-radius: 0.6rem; background: #fff; color: #4a3030;
-  font-weight: 700; font-size: 0.9rem; cursor: pointer;
-  transition: background 0.15s;
+  font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: background 0.15s;
 }
 .mpo-cancel:hover { background: #fdf5f0; }
 .mpo-save {
   flex: 2; padding: 0.65rem; border: none;
   border-radius: 0.6rem; background: var(--maroon); color: #fff;
-  font-weight: 700; font-size: 0.9rem; cursor: pointer;
-  transition: background 0.18s;
+  font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: background 0.18s;
 }
-.mpo-save:hover:not(:disabled)  { background: var(--maroon-dark); }
+.mpo-save:hover:not(:disabled) { background: var(--maroon-dark); }
 .mpo-save:disabled { opacity: 0.6; cursor: not-allowed; }
 
 @media (max-width: 480px) {
   .mpo-modal { border-radius: 1rem; }
   .mpo-header, .mpo-fields, .mpo-footer { padding-left: 1.1rem; padding-right: 1.1rem; }
-}
-/* ── ADD THESE RULES TO THE BOTTOM OF YOUR EXISTING UserNavBar.css ── */
-
-/* ── Notification bell button ── */
-.unav-notif-btn {
-  position: relative;
-  display: flex; align-items: center; justify-content: center;
-  width: 38px; height: 38px;
-  background: none;
-  border: 2px solid var(--nav-border);
-  border-radius: 50%;
-  color: #4a3030;
-  cursor: pointer;
-  transition: border-color 0.18s, color 0.18s, background 0.18s;
-  flex-shrink: 0;
-}
-.unav-notif-btn:hover,
-.unav-notif-btn.active {
-  border-color: var(--maroon);
-  color: var(--maroon);
-  background: var(--maroon-light);
-}
-
-.unav-notif-badge {
-  position: absolute; top: -4px; right: -4px;
-  min-width: 16px; height: 16px; padding: 0 3px;
-  background: var(--maroon); color: #fff;
-  border-radius: 20px; font-size: 0.6rem; font-weight: 800;
-  display: flex; align-items: center; justify-content: center;
-  border: 1.5px solid #fff; pointer-events: none;
-}
-
-/* ── Notification aside panel ── */
-.unav-notif-backdrop {
-  position: fixed; inset: 0;
-  z-index: 250;
-  background: rgba(26, 15, 15, 0.25);
-  animation: fadeIn 0.15s ease;
-}
-
-.unav-notif-aside {
-  position: fixed;
-  top: var(--nav-h);     /* sits directly below the navbar */
-  right: 0;
-  bottom: 0;
-  width: 360px;
-  max-width: 92vw;
-  z-index: 260;
-  background: #fff;
-  border-left: 1.5px solid var(--nav-border);
-  box-shadow: -6px 0 32px rgba(0, 0, 0, 0.1);
-  overflow-y: auto;
-  animation: slideInRight 0.22s ease;
-}
-
-@keyframes slideInRight {
-  from { transform: translateX(24px); opacity: 0; }
-  to   { transform: translateX(0);    opacity: 1; }
-}
-
-/* On mobile the aside sits above the bottom nav */
-@media (max-width: 767px) {
-  .unav-notif-aside {
-    top: 0;
-    bottom: var(--mob-nav-h);
-    width: 100%;
-    max-width: 100%;
-    border-left: none;
-    border-top: 1.5px solid var(--nav-border);
-  }
 }

@@ -10,10 +10,12 @@ import Signup               from './pages/Signup';
 // Authenticated user pages
 import UserHomePage         from './pages/UserHomePage';
 import UserProfilePage      from './pages/UserProfilePage';
+import PublicProfilePage    from './pages/PublicProfilePage';
 import AddPostPage          from './pages/AddPostPage';
 import RecipesPage          from './pages/RecipesPage';
 import QuestionsPage        from './pages/QuestionsPage';
 import PostDetailPage       from './pages/PostDetailPage';
+import ReelsPage            from './pages/ReelsPage';
 
 // Food category page
 import FoodCategoryPage     from './pages/FoodCategoryPage';
@@ -31,7 +33,6 @@ import UserNavBar           from './components/UserNavBar';
 
 import './App.css';
 
-// ── Scroll to top on every route change ──────────────────────────
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => {
@@ -40,13 +41,11 @@ function ScrollToTop() {
   return null;
 }
 
-// ── Auth guard ────────────────────────────────────────────────────
 const PrivateRoute = ({ children }) => {
   const token = localStorage.getItem('token');
   return token ? children : <Navigate to="/login" replace />;
 };
 
-// ── Authenticated layout wrapper ─────────────────────────────────
 const UserLayout = ({ children }) => (
   <div className="user-layout">
     <UserNavBar />
@@ -67,12 +66,9 @@ function App() {
           <Route path="/login"                element={<Login />} />
           <Route path="/signup"               element={<Signup />} />
           <Route path="/contribute"           element={<ContributePage />} />
-
-          {/* /foods redirects to food category page */}
           <Route path="/foods"                element={<FoodCategoryPage />} />
           <Route path="/category/:categoryId" element={<FoodCategoryPage />} />
 
-          {/* Contribute form — protected */}
           <Route path="/contribute/form" element={
             <PrivateRoute><ContributeFormPage /></PrivateRoute>
           } />
@@ -83,6 +79,9 @@ function App() {
           } />
           <Route path="/recipes" element={
             <PrivateRoute><UserLayout><RecipesPage /></UserLayout></PrivateRoute>
+          } />
+          <Route path="/reels" element={
+            <PrivateRoute><UserLayout><ReelsPage /></UserLayout></PrivateRoute>
           } />
           <Route path="/questions" element={
             <PrivateRoute><UserLayout><QuestionsPage /></UserLayout></PrivateRoute>
@@ -97,11 +96,15 @@ function App() {
             <PrivateRoute><UserLayout><PostDetailPage /></UserLayout></PrivateRoute>
           } />
 
+          {/* ── Public user profiles ── */}
+          <Route path="/user/:userId" element={
+            <PrivateRoute><UserLayout><PublicProfilePage /></UserLayout></PrivateRoute>
+          } />
+
           {/* ── Admin ── */}
           <Route path="/admin/login"     element={<AdminLoginPage />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
-          {/* Catch-all */}
           <Route path="*" element={<Navigate to="/" replace />} />
 
         </Routes>

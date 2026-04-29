@@ -18,6 +18,8 @@ const EditIcon    = ()           => (<svg width="16" height="16" viewBox="0 0 24
 const CameraIcon  = ()           => (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>);
 const CloseIcon   = ()           => (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>);
 const BellIcon    = ({ filled }) => (<svg width="20" height="20" viewBox="0 0 24 24" fill={filled?'currentColor':'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>);
+const GlobeIcon   = ()           => (<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>);
+const LockIcon    = ()           => (<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>);
 
 const MOB_ITEMS = [
   { path: '/homeUser',  label: 'Home',      Icon: HomeIcon   },
@@ -27,39 +29,32 @@ const MOB_ITEMS = [
   { path: '/profile',   label: 'Profile',   Icon: UserIcon   },
 ];
 
-/* ── Avatar helper ── */
 function Avatar({ src, name, size = 34, className = '' }) {
   const [imgError, setImgError] = useState(false);
-
   if (src && !imgError) {
     return (
-      <img
-        src={src} alt={name || 'User'}
-        className={className}
+      <img src={src} alt={name || 'User'} className={className}
         style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover' }}
-        onError={() => setImgError(true)}
-      />
+        onError={() => setImgError(true)} />
     );
   }
   const initials = (name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   return (
-    <span
-      className={`unav-initials ${className}`}
-      style={{ width: size, height: size, fontSize: size * 0.36 }}
-    >
+    <span className={`unav-initials ${className}`} style={{ width: size, height: size, fontSize: size * 0.36 }}>
       {initials}
     </span>
   );
 }
 
-/* ── Manage Profile Overlay ── */
+/* ── Manage Profile Overlay — now includes Public/Private toggle ── */
 function ManageProfileOverlay({ user, onClose, onSaved }) {
-  const [name,       setName]       = useState(user.name || '');
-  const [bio,        setBio]        = useState(user.bio  || '');
-  const [picFile,    setPicFile]    = useState(null);
-  const [picPreview, setPicPreview] = useState(null);
-  const [saving,     setSaving]     = useState(false);
-  const [error,      setError]      = useState('');
+  const [name,       setName]      = useState(user.name || '');
+  const [bio,        setBio]       = useState(user.bio  || '');
+  const [isPublic,   setIsPublic]  = useState(user.is_public !== false); // default true
+  const [picFile,    setPicFile]   = useState(null);
+  const [picPreview, setPicPreview]= useState(null);
+  const [saving,     setSaving]    = useState(false);
+  const [error,      setError]     = useState('');
   const fileRef = useRef();
 
   const handlePic = (e) => {
@@ -74,13 +69,21 @@ function ManageProfileOverlay({ user, onClose, onSaved }) {
     setSaving(true); setError('');
     try {
       const fd = new FormData();
-      fd.append('name', name.trim());
-      fd.append('bio',  bio.trim());
+      fd.append('name',      name.trim());
+      fd.append('bio',       bio.trim());
+      fd.append('is_public', isPublic ? 'true' : 'false');
       if (picFile) fd.append('profile_picture', picFile);
+
       const res     = await updateProfile(user.user_id, fd);
       const updated = res.data.data?.user || res.data.user || {};
       const stored  = JSON.parse(localStorage.getItem('user') || '{}');
-      const merged  = { ...stored, name: updated.name || name.trim(), bio: updated.bio || bio.trim(), profile_picture: updated.profile_picture || stored.profile_picture };
+      const merged  = {
+        ...stored,
+        name:            updated.name      || name.trim(),
+        bio:             updated.bio       || bio.trim(),
+        is_public:       updated.is_public ?? isPublic,
+        profile_picture: updated.profile_picture || stored.profile_picture,
+      };
       if (picFile && updated.profile_picture) merged.profile_picture = updated.profile_picture;
       localStorage.setItem('user', JSON.stringify(merged));
       onSaved(merged);
@@ -114,13 +117,43 @@ function ManageProfileOverlay({ user, onClose, onSaved }) {
 
         <div className="mpo-fields">
           {error && <p className="mpo-error">⚠ {error}</p>}
+
           <div className="mpo-field">
             <label className="mpo-label">Username</label>
-            <input type="text" className="mpo-input" value={name} onChange={e => setName(e.target.value)} placeholder="Your name" />
+            <input type="text" className="mpo-input" value={name}
+              onChange={e => setName(e.target.value)} placeholder="Your name" />
           </div>
+
           <div className="mpo-field">
             <label className="mpo-label">Bio</label>
-            <textarea className="mpo-textarea" rows={3} value={bio} onChange={e => setBio(e.target.value)} placeholder="Tell people about yourself…" />
+            <textarea className="mpo-textarea" rows={3} value={bio}
+              onChange={e => setBio(e.target.value)} placeholder="Tell people about yourself…" />
+          </div>
+
+          {/* ── Public / Private toggle ── */}
+          <div className="mpo-field">
+            <label className="mpo-label">Profile Visibility</label>
+            <div className="mpo-visibility-toggle">
+              <button
+                type="button"
+                className={`mpo-vis-btn ${isPublic ? 'active' : ''}`}
+                onClick={() => setIsPublic(true)}
+              >
+                <GlobeIcon /> Public
+              </button>
+              <button
+                type="button"
+                className={`mpo-vis-btn ${!isPublic ? 'active' : ''}`}
+                onClick={() => setIsPublic(false)}
+              >
+                <LockIcon /> Private
+              </button>
+            </div>
+            <p className="mpo-vis-hint">
+              {isPublic
+                ? 'Anyone can find and view your profile.'
+                : 'Only you can see your profile. You won\'t appear in Top Users.'}
+            </p>
           </div>
         </div>
 
@@ -139,11 +172,11 @@ function ManageProfileOverlay({ user, onClose, onSaved }) {
 export default function UserNavBar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [dropOpen,     setDropOpen]     = useState(false);
-  const [notifOpen,    setNotifOpen]    = useState(false);
-  const [unreadCount,  setUnreadCount]  = useState(0);
-  const [showManage,   setShowManage]   = useState(false);
-  const [currentUser,  setCurrentUser]  = useState(() => JSON.parse(localStorage.getItem('user') || '{}'));
+  const [dropOpen,    setDropOpen]    = useState(false);
+  const [notifOpen,   setNotifOpen]   = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showManage,  setShowManage]  = useState(false);
+  const [currentUser, setCurrentUser] = useState(() => JSON.parse(localStorage.getItem('user') || '{}'));
   const dropRef = useRef(null);
 
   useEffect(() => {
@@ -183,17 +216,14 @@ export default function UserNavBar() {
 
   const handleSaved = (updated) => {
     setCurrentUser(updated);
-    window.dispatchEvent(new Event('profile-updated'));
   };
 
   const isActive = (path) => location.pathname === path;
 
   return (
     <>
-      {/* ══ DESKTOP TOP NAV ══ */}
       <nav className="unav">
         <div className="unav-inner">
-
           <Link to="/" className="unav-brand">
             <span className="unav-brand-text">
               <span className="unav-brand-k">Khana</span>
@@ -205,28 +235,17 @@ export default function UserNavBar() {
             <Link to="/homeUser"  className={`unav-link ${isActive('/homeUser')  ? 'active' : ''}`}><HomeIcon   filled={isActive('/homeUser')}  /><span>Home</span></Link>
             <Link to="/recipes"   className={`unav-link ${isActive('/recipes')   ? 'active' : ''}`}><RecipeIcon filled={isActive('/recipes')}   /><span>Recipes</span></Link>
             <Link to="/questions" className={`unav-link ${isActive('/questions') ? 'active' : ''}`}><ChatIcon   filled={isActive('/questions')} /><span>Questions</span></Link>
-            <Link to="/profile"   className={`unav-link ${isActive('/profile')   ? 'active' : ''}`}>
-              <UserIcon filled={isActive('/profile')} />
-              <span>My Profile</span>
-            </Link>
+            <Link to="/profile"   className={`unav-link ${isActive('/profile')   ? 'active' : ''}`}><UserIcon   filled={isActive('/profile')}   /><span>My Profile</span></Link>
           </div>
 
           <div className="unav-right">
             <Link to="/add" className="unav-post-btn"><PlusIcon /> New Post</Link>
-
-            {/* ── Notification bell ── */}
-            <button
-              className={`unav-notif-btn ${notifOpen ? 'active' : ''}`}
-              onClick={() => setNotifOpen(o => !o)}
-              title="Notifications"
-            >
+            <button className={`unav-notif-btn ${notifOpen ? 'active' : ''}`}
+              onClick={() => setNotifOpen(o => !o)} title="Notifications">
               <BellIcon filled={notifOpen} />
-              {unreadCount > 0 && (
-                <span className="unav-notif-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>
-              )}
+              {unreadCount > 0 && <span className="unav-notif-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>}
             </button>
 
-            {/* ── Avatar + dropdown ── */}
             <div className="unav-avatar-wrap" ref={dropRef}>
               <button className="unav-avatar-btn" onClick={() => setDropOpen(o => !o)}>
                 <div className="unav-avatar-ring">
@@ -234,7 +253,6 @@ export default function UserNavBar() {
                 </div>
                 <ChevronIcon />
               </button>
-
               {dropOpen && (
                 <div className="unav-dropdown">
                   <div className="unav-drop-user">
@@ -258,10 +276,8 @@ export default function UserNavBar() {
         </div>
       </nav>
 
-      {/* ══ NOTIFICATION PANEL (right aside) ══ */}
       {notifOpen && (
         <>
-          {/* Backdrop — click outside to close */}
           <div className="unav-notif-backdrop" onClick={() => setNotifOpen(false)} />
           <aside className="unav-notif-aside">
             <NotificationPanel onClose={() => setNotifOpen(false)} />
@@ -269,38 +285,29 @@ export default function UserNavBar() {
         </>
       )}
 
-      {/* ══ MOBILE BOTTOM NAV ══ */}
       <nav className="unav-mob">
         {MOB_ITEMS.map(({ path, label, Icon, isAdd }) => (
-          <Link
-            key={path}
-            to={path}
-            className={`unav-mob-item ${isAdd ? 'unav-mob-add' : ''} ${isActive(path) ? 'active' : ''}`}
-          >
-            {isAdd ? (
-              <PlusIcon />
-            ) : path === '/profile' ? (
-              <>
-                <span className="unav-mob-icon-wrap">
-                  <Avatar src={currentUser.profile_picture} name={currentUser.name} size={24} className="unav-mob-avatar" />
-                </span>
-                <span className="unav-mob-label">{label}</span>
-              </>
-            ) : (
-              <>
-                <Icon filled={isActive(path)} />
-                <span className="unav-mob-label">{label}</span>
-              </>
-            )}
+          <Link key={path} to={path}
+            className={`unav-mob-item ${isAdd ? 'unav-mob-add' : ''} ${isActive(path) ? 'active' : ''}`}>
+            {isAdd ? <PlusIcon />
+              : path === '/profile' ? (
+                <>
+                  <span className="unav-mob-icon-wrap">
+                    <Avatar src={currentUser.profile_picture} name={currentUser.name} size={24} className="unav-mob-avatar" />
+                  </span>
+                  <span className="unav-mob-label">{label}</span>
+                </>
+              ) : (
+                <>
+                  <Icon filled={isActive(path)} />
+                  <span className="unav-mob-label">{label}</span>
+                </>
+              )}
           </Link>
         ))}
-
-        {/* Mobile bell tab */}
-        <button
-          className={`unav-mob-item ${notifOpen ? 'active' : ''}`}
+        <button className={`unav-mob-item ${notifOpen ? 'active' : ''}`}
           onClick={() => setNotifOpen(o => !o)}
-          style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-        >
+          style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
           <span className="unav-mob-icon-wrap">
             <BellIcon filled={notifOpen} />
             {unreadCount > 0 && <span className="unav-mob-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>}
@@ -309,7 +316,6 @@ export default function UserNavBar() {
         </button>
       </nav>
 
-      {/* ══ MANAGE PROFILE OVERLAY ══ */}
       {showManage && (
         <ManageProfileOverlay
           user={currentUser}

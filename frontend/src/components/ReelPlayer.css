@@ -1,0 +1,155 @@
+/* ══════════════════════════════════════════
+   ReelPlayer.css  — warm beige/green theme
+   Ratio: 4:5 (wider than 9:16, less crop)
+   ══════════════════════════════════════════ */
+
+.reel-player {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  background: #1a1a12;
+  border-radius: 0.875rem;
+  overflow: hidden;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.reel-player-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 0.875rem;
+}
+
+/* ── Gradients ── */
+.reel-grad-top {
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 60px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.3), transparent);
+  pointer-events: none; border-radius: 0.875rem 0.875rem 0 0;
+}
+.reel-grad-bot {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 80px;
+  background: linear-gradient(to top, rgba(0,0,0,0.55), transparent);
+  pointer-events: none; border-radius: 0 0 0.875rem 0.875rem;
+}
+
+/* ── Centre play/pause flash ── */
+.reel-center-icon {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%) scale(0.75);
+  opacity: 0;
+  width: 58px; height: 58px;
+  background: rgba(245,237,230,0.18);
+  border: 2px solid rgba(245,237,230,0.55);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(6px);
+  pointer-events: none;
+  transition: opacity 0.18s, transform 0.18s;
+}
+.reel-center-icon.vis {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* ── Controls overlay ── */
+.reel-controls {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  justify-content: space-between;
+  padding: 0.55rem 0.7rem 0.6rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+  border-radius: 0.875rem;
+}
+.reel-controls.vis {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.reel-controls-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.reel-controls-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+/* ── Time ── */
+.reel-time {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: rgba(245,237,230,0.9);
+  font-family: 'DM Sans', sans-serif;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+
+/* ── Scrubber ── */
+.reel-scrubber {
+  width: 100%;
+  padding: 5px 0;
+  cursor: pointer;
+}
+.reel-scrubber-track {
+  position: relative;
+  width: 100%; height: 3px;
+  background: rgba(245,237,230,0.2);
+  border-radius: 3px;
+}
+.reel-buf {
+  position: absolute; top: 0; left: 0; height: 100%;
+  background: rgba(245,237,230,0.3);
+  border-radius: 3px;
+}
+.reel-fill {
+  position: absolute; top: 0; left: 0; height: 100%;
+  background: #a8d5b5;
+  border-radius: 3px;
+  transition: width 0.1s;
+}
+.reel-thumb {
+  position: absolute; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 11px; height: 11px;
+  background: #f5ede6;
+  border-radius: 50%;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+  transition: left 0.1s;
+}
+.reel-scrubber:hover .reel-scrubber-track { height: 5px; }
+.reel-scrubber:hover .reel-thumb { width: 13px; height: 13px; }
+
+/* ── Control buttons ── */
+.reel-ctrl-btn {
+  background: rgba(245,237,230,0.15);
+  border: 1px solid rgba(245,237,230,0.25);
+  border-radius: 50%;
+  width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  color: #f5ede6;
+  backdrop-filter: blur(6px);
+  transition: background 0.15s, transform 0.12s;
+  flex-shrink: 0;
+}
+.reel-ctrl-btn:hover  { background: rgba(245,237,230,0.3); transform: scale(1.08); }
+.reel-ctrl-btn:active { transform: scale(0.93); }
+
+/* ── Fullscreen overrides ── */
+:fullscreen .reel-player,
+:-webkit-full-screen .reel-player {
+  border-radius: 0; aspect-ratio: unset; height: 100vh;
+}
+:fullscreen .reel-player-video,
+:-webkit-full-screen .reel-player-video {
+  border-radius: 0; object-fit: contain;
+}

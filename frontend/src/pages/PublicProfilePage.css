@@ -1,0 +1,160 @@
+/* ════════════════════════════════════════
+   PublicProfilePage.css
+   ════════════════════════════════════════ */
+.pub-profile {
+  min-height: 100vh;
+  background: #fffcf9;
+  font-family: "DM Sans", sans-serif;
+  padding-bottom: 3rem;
+}
+
+.pub-profile-container {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 1.75rem 1.5rem;
+}
+
+/* ── Back button ── */
+.pub-profile-back-btn {
+  background: none; border: none; cursor: pointer;
+  font-size: 0.845rem; font-weight: 700; color: #9c7c6a;
+  padding: 0; margin-bottom: 1.25rem;
+  display: flex; align-items: center; gap: 0.3rem;
+  transition: color 0.15s;
+  font-family: inherit;
+}
+.pub-profile-back-btn:hover { color: #7c2d2d; }
+
+/* ── Header ── */
+.pub-profile-header {
+  display: flex; align-items: flex-start; gap: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #f0e8e0;
+  margin-bottom: 1.25rem;
+}
+.pub-profile-avatar {
+  width: 88px; height: 88px;
+  border-radius: 50%; object-fit: cover;
+  border: 3px solid #e8ddd5; flex-shrink: 0;
+}
+.pub-profile-info { flex: 1; min-width: 0; }
+.pub-profile-name {
+  font-family: "Fraunces", serif;
+  font-size: 1.4rem; font-weight: 800;
+  color: #1a0f0f; margin: 0 0 0.35rem;
+}
+.pub-profile-bio {
+  font-size: 0.875rem; color: #5a3a3a;
+  line-height: 1.6; margin: 0 0 0.875rem;
+}
+.pub-profile-stats {
+  display: flex; align-items: center; gap: 1rem;
+}
+.pub-profile-stat {
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+}
+.pub-profile-stat-n {
+  font-size: 1.05rem; font-weight: 800; color: #1a0f0f;
+}
+.pub-profile-stat-l {
+  font-size: 0.7rem; color: #9c7c6a; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.pub-profile-stat-div {
+  width: 1px; height: 28px; background: #e8ddd5;
+}
+
+/* ── Tabs ── */
+.pub-profile-tabs {
+  display: flex; gap: 0.15rem;
+  border-bottom: 2px solid #f0e8e0;
+  margin-bottom: 1.25rem;
+}
+.pub-profile-tab {
+  display: flex; align-items: center; gap: 0.4rem;
+  padding: 0.6rem 1rem;
+  border: none; background: none; cursor: pointer;
+  font-family: "DM Sans", sans-serif;
+  font-size: 0.845rem; font-weight: 600; color: #7a5050;
+  border-bottom: 2px solid transparent; margin-bottom: -2px;
+  transition: color 0.15s, border-color 0.15s;
+}
+.pub-profile-tab:hover { color: #7c2d2d; }
+.pub-profile-tab.active { color: #7c2d2d; border-bottom-color: #7c2d2d; font-weight: 700; }
+
+/* ── Content ── */
+.pub-profile-feed {
+  display: flex; flex-direction: column; gap: 1rem;
+}
+.pub-profile-empty {
+  font-size: 0.875rem; color: #9c7c6a;
+  padding: 2rem 0; text-align: center;
+}
+
+/* ── Questions list ── */
+.pub-profile-qlist { display: flex; flex-direction: column; gap: 0.75rem; }
+.pub-profile-qitem {
+  background: #fff;
+  border: 1px solid #e8ddd5;
+  border-radius: 0.75rem;
+  padding: 1rem 1.1rem;
+  cursor: default;
+}
+.pub-profile-qtitle {
+  font-family: "Fraunces", serif;
+  font-size: 0.95rem; font-weight: 700; color: #1a0f0f;
+  margin: 0 0 0.35rem;
+}
+.pub-profile-qdesc {
+  font-size: 0.82rem; color: #5a3a3a;
+  line-height: 1.5; margin: 0 0 0.5rem;
+}
+.pub-profile-qmeta {
+  display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
+  font-size: 0.75rem; color: #9c7c6a;
+}
+.pub-profile-culture-chip {
+  font-size: 0.65rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.05em; padding: 2px 8px; border-radius: 20px;
+  background: #edf7f5; color: #1f6058;
+}
+.pub-profile-qdate { font-size: 0.72rem; color: #b8a09a; }
+
+/* ── States ── */
+.pub-profile-state {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 0.875rem; min-height: 60vh; text-align: center;
+  padding: 2rem;
+}
+.pub-profile-state-icon  { font-size: 3rem; opacity: 0.35; }
+.pub-profile-state-title {
+  font-family: "Fraunces", serif;
+  font-size: 1.2rem; font-weight: 800; color: #1a0f0f; margin: 0;
+}
+.pub-profile-state-msg   { font-size: 0.9rem; color: #9c7c6a; margin: 0; }
+.pub-profile-spinner {
+  width: 32px; height: 32px;
+  border: 3px solid #e8ddd5; border-top-color: #2a7d6f;
+  border-radius: 50%; animation: pub-spin 0.7s linear infinite;
+}
+@keyframes pub-spin { to { transform: rotate(360deg); } }
+.pub-profile-back {
+  padding: 0.55rem 1.5rem; background: #7c2d2d; color: #fff;
+  border: none; border-radius: 50px; font-family: "DM Sans", sans-serif;
+  font-weight: 700; font-size: 0.875rem; cursor: pointer;
+  transition: background 0.18s;
+}
+.pub-profile-back:hover { background: #5c1f1f; }
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .pub-profile-container { padding: 1.25rem 1rem 4rem; }
+  .pub-profile-header { flex-direction: column; align-items: center; text-align: center; }
+  .pub-profile-stats  { justify-content: center; }
+  .pub-profile-avatar { width: 76px; height: 76px; }
+  .pub-profile-name   { font-size: 1.2rem; }
+  .pub-profile-tabs   { overflow-x: auto; scrollbar-width: none; }
+  .pub-profile-tabs::-webkit-scrollbar { display: none; }
+  .pub-profile-tab    { padding: 0.5rem 0.75rem; font-size: 0.8rem; }
+}

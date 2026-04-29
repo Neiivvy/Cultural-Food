@@ -1,51 +1,56 @@
 import db from "../config/db.js";
 
 const Post = {
-  // Paginated feed with author info + likes + comment count
-getFeed: async ({ limit = 20, offset = 0, cultureId = null, type = null, types = null, userId = null } = {}) => {
-  const where  = [];
-  const params = [];
+  // Paginated feed — private users' posts are hidden from everyone else's feed
+  getFeed: async ({ limit = 20, offset = 0, cultureId = null, type = null, types = null, userId = null, requesterId = null } = {}) => {
+    const where  = [];
+    const params = [];
 
-  if (cultureId) { where.push("p.culture_id = ?"); params.push(cultureId); }
-
-  // Single type filter (e.g. type=recipe or type=reel)
-  if (type) {
-    where.push("p.post_type = ?");
-    params.push(type);
-  }
-  // Multiple types filter (e.g. types=recipe,reel)
-  else if (types) {
-    const typeList = types.split(",").map(t => t.trim()).filter(Boolean);
-    if (typeList.length) {
-      where.push(`p.post_type IN (${typeList.map(() => "?").join(",")})`);
-      params.push(...typeList);
+    // Hide private users' posts UNLESS the requester IS that user
+    if (requesterId) {
+      where.push("(u.is_public = TRUE OR u.user_id = ?)");
+      params.push(requesterId);
+    } else {
+      where.push("u.is_public = TRUE");
     }
-  }
 
-  if (userId) { where.push("p.user_id = ?"); params.push(userId); }
+    if (cultureId) { where.push("p.culture_id = ?"); params.push(cultureId); }
 
-  const whereSQL = where.length ? `WHERE ${where.join(" AND ")}` : "";
+    if (type) {
+      where.push("p.post_type = ?");
+      params.push(type);
+    } else if (types) {
+      const typeList = types.split(",").map(t => t.trim()).filter(Boolean);
+      if (typeList.length) {
+        where.push(`p.post_type IN (${typeList.map(() => "?").join(",")})`);
+        params.push(...typeList);
+      }
+    }
 
-  const [rows] = await db.execute(
-    `SELECT p.post_id, p.title, p.description, p.media_url, p.post_type, p.created_at,
-            u.user_id AS author_id, u.name AS author_name, u.profile_picture,
-            c.culture_name,
-            COUNT(DISTINCT pl.like_id)    AS likes_count,
-            COUNT(DISTINCT cm.comment_id) AS comments_count
-     FROM   posts p
-     JOIN   users u   ON p.user_id    = u.user_id
-     LEFT JOIN cultures c   ON p.culture_id = c.culture_id
-     LEFT JOIN post_likes pl ON p.post_id   = pl.post_id
-     LEFT JOIN comments   cm ON p.post_id   = cm.post_id
-     ${whereSQL}
-     GROUP BY p.post_id, p.title, p.description, p.media_url, p.post_type, p.created_at,
-              u.user_id, u.name, u.profile_picture, c.culture_name
-     ORDER BY (COUNT(DISTINCT pl.like_id) + COUNT(DISTINCT cm.comment_id)) DESC, p.created_at DESC
-     LIMIT ? OFFSET ?`,
-    [...params, limit, offset]
-  );
-  return rows;
-},
+    if (userId) { where.push("p.user_id = ?"); params.push(userId); }
+
+    const whereSQL = `WHERE ${where.join(" AND ")}`;
+
+    const [rows] = await db.execute(
+      `SELECT p.post_id, p.title, p.description, p.media_url, p.post_type, p.created_at,
+              u.user_id AS author_id, u.name AS author_name, u.profile_picture,
+              c.culture_name,
+              COUNT(DISTINCT pl.like_id)    AS likes_count,
+              COUNT(DISTINCT cm.comment_id) AS comments_count
+       FROM   posts p
+       JOIN   users u   ON p.user_id    = u.user_id
+       LEFT JOIN cultures c   ON p.culture_id = c.culture_id
+       LEFT JOIN post_likes pl ON p.post_id   = pl.post_id
+       LEFT JOIN comments   cm ON p.post_id   = cm.post_id
+       ${whereSQL}
+       GROUP BY p.post_id, p.title, p.description, p.media_url, p.post_type, p.created_at,
+                u.user_id, u.name, u.profile_picture, c.culture_name
+       ORDER BY (COUNT(DISTINCT pl.like_id) + COUNT(DISTINCT cm.comment_id)) DESC, p.created_at DESC
+       LIMIT ? OFFSET ?`,
+      [...params, limit, offset]
+    );
+    return rows;
+  },
 
   // Single post detail
   findById: async (postId) => {
@@ -79,7 +84,6 @@ getFeed: async ({ limit = 20, offset = 0, cultureId = null, type = null, types =
     const allowed = ["title", "description", "culture_id", "media_url"];
     const sets    = [];
     const values  = [];
-
     for (const key of allowed) {
       if (fields[key] !== undefined) {
         sets.push(`${key} = ?`);
@@ -87,12 +91,8 @@ getFeed: async ({ limit = 20, offset = 0, cultureId = null, type = null, types =
       }
     }
     if (!sets.length) return false;
-
     values.push(postId);
-    await db.execute(
-      `UPDATE posts SET ${sets.join(", ")} WHERE post_id = ?`,
-      values
-    );
+    await db.execute(`UPDATE posts SET ${sets.join(", ")} WHERE post_id = ?`, values);
     return true;
   },
 
@@ -122,10 +122,7 @@ getFeed: async ({ limit = 20, offset = 0, cultureId = null, type = null, types =
     if (!items?.length) return;
     const values = items.filter(t => t?.trim()).map(t => [postId, t.trim()]);
     if (!values.length) return;
-    await conn.query(
-      "INSERT INTO ingredients (post_id, ingredient_text) VALUES ?",
-      [values]
-    );
+    await conn.query("INSERT INTO ingredients (post_id, ingredient_text) VALUES ?", [values]);
   },
 
   // ── Steps ────────────────────────────────────────────────────
@@ -144,10 +141,7 @@ getFeed: async ({ limit = 20, offset = 0, cultureId = null, type = null, types =
       .filter(d => d?.trim())
       .map((desc, idx) => [postId, idx + 1, desc.trim()]);
     if (!values.length) return;
-    await conn.query(
-      "INSERT INTO steps (post_id, step_number, step_description) VALUES ?",
-      [values]
-    );
+    await conn.query("INSERT INTO steps (post_id, step_number, step_description) VALUES ?", [values]);
   },
 
   // ── Likes ────────────────────────────────────────────────────

@@ -1,0 +1,460 @@
+/* ════════════════════════════════════════════
+   ReelsPage.css
+   Full-screen vertical snap reel feed
+   ════════════════════════════════════════════ */
+
+:root {
+  --nav-h: 64px;
+  --reel-teal:   #2a7d6f;
+  --reel-teal-l: #7dd6cc;
+  --reel-maroon: #7c2d2d;
+}
+
+/* ── Page shell ── */
+.rp-page {
+  position: fixed;
+  top: var(--nav-h);
+  left: 0; right: 0; bottom: 0;
+  background: #000;
+  display: flex;
+  overflow: hidden;
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* ── Scrollable feed ── */
+.rp-feed {
+  flex: 1;
+  height: 100%;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.rp-feed::-webkit-scrollbar { display: none; }
+
+/* ── Individual reel item ── */
+.rp-item {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  scroll-snap-align: start;
+  display: flex;
+  align-items: stretch;
+  background: #000;
+  overflow: hidden;
+}
+
+/* ── Video fills the item — centered, 9:16 ── */
+.rp-video-wrap {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+}
+.rp-video-wrap .reel-player {
+  height: 100%;
+  width: auto;
+  aspect-ratio: 9 / 16;
+  max-width: 100%;
+  border-radius: 0;
+}
+.rp-video-wrap .reel-player-video {
+  border-radius: 0;
+}
+
+/* ── Bottom-left overlay: author + title ── */
+.rp-overlay-info {
+  position: absolute;
+  bottom: 3rem;
+  left: 1.25rem;
+  right: 90px; /* leave space for right actions */
+  z-index: 10;
+  pointer-events: none;
+}
+
+.rp-overlay-author {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.rp-overlay-av {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255,255,255,0.6);
+  flex-shrink: 0;
+}
+.rp-overlay-name {
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.7);
+}
+.rp-overlay-culture {
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--reel-teal-l);
+  background: rgba(42,125,111,0.25);
+  border: 1px solid rgba(125,214,204,0.3);
+  padding: 1px 8px;
+  border-radius: 20px;
+  backdrop-filter: blur(4px);
+}
+.rp-overlay-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 0.35rem;
+  line-height: 1.3;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.7);
+}
+.rp-overlay-desc {
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.75);
+  line-height: 1.5;
+  margin: 0;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.7);
+}
+
+/* ── Right-side action buttons ── */
+.rp-actions {
+  position: absolute;
+  right: 1rem;
+  bottom: 3.5rem;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.rp-actions-avatar {
+  position: relative;
+  margin-bottom: 0.25rem;
+}
+.rp-actions-av-img {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2.5px solid #fff;
+  display: block;
+}
+
+.rp-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #fff;
+  padding: 0;
+  transition: transform 0.15s;
+}
+.rp-action-btn span {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: rgba(255,255,255,0.9);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+  font-family: 'DM Sans', sans-serif;
+}
+.rp-action-btn:hover { transform: scale(1.12); }
+.rp-action-btn:active { transform: scale(0.92); }
+.rp-action-btn--liked svg { filter: drop-shadow(0 0 6px rgba(239,68,68,0.6)); }
+.rp-action-btn--recipe {
+  background: rgba(42,125,111,0.35);
+  border: 1px solid rgba(125,214,204,0.3);
+  border-radius: 50px;
+  padding: 0.5rem 0.65rem;
+  backdrop-filter: blur(6px);
+}
+.rp-action-btn--recipe:hover { background: rgba(42,125,111,0.55); }
+
+/* ── Comment drawer ── */
+.rp-comment-drawer {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  z-index: 20;
+  background: rgba(10,10,10,0.96);
+  border-top: 1px solid #2a2a2a;
+  border-radius: 1.25rem 1.25rem 0 0;
+  max-height: 65%;
+  display: flex;
+  flex-direction: column;
+  backdrop-filter: blur(12px);
+  animation: drawerUp 0.25s ease;
+}
+@keyframes drawerUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.rp-comment-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #f5ede6;
+  border-bottom: 1px solid #1e1e1e;
+  flex-shrink: 0;
+}
+.rp-comment-drawer-header button {
+  background: none; border: none; cursor: pointer; padding: 2px;
+  display: flex; align-items: center;
+}
+
+.rp-comment-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.75rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  scrollbar-width: thin;
+  scrollbar-color: #2a2a2a transparent;
+}
+.rp-comment-empty { font-size: 0.85rem; color: #5a3a3a; text-align: center; padding: 1rem 0; }
+.rp-comment-item  { display: flex; gap: 0.6rem; align-items: flex-start; }
+.rp-comment-av    { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.rp-comment-name  { font-size: 0.8rem; font-weight: 800; color: var(--reel-teal-l); display: block; margin-bottom: 2px; }
+.rp-comment-text  { font-size: 0.84rem; color: rgba(255,255,255,0.8); line-height: 1.45; margin: 0; }
+
+.rp-comment-form {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem 1rem;
+  border-top: 1px solid #1e1e1e;
+  flex-shrink: 0;
+}
+.rp-comment-input {
+  flex: 1;
+  padding: 0.5rem 0.9rem;
+  background: #1a1a1a;
+  border: 1.5px solid #2a2a2a;
+  border-radius: 20px;
+  color: #f5ede6;
+  font-size: 0.875rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.18s;
+}
+.rp-comment-input:focus { border-color: var(--reel-teal); }
+.rp-comment-submit {
+  padding: 0.5rem 1rem;
+  background: var(--reel-teal);
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.18s;
+}
+.rp-comment-submit:hover    { background: #1f6058; }
+.rp-comment-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Recipe drawer ── */
+.rp-recipe-drawer {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  z-index: 20;
+  background: rgba(10,10,10,0.96);
+  border-top: 1px solid #1e1e1e;
+  border-radius: 1.25rem 1.25rem 0 0;
+  max-height: 70%;
+  display: flex;
+  flex-direction: column;
+  backdrop-filter: blur(12px);
+  animation: drawerUp 0.25s ease;
+}
+
+.rp-recipe-drawer-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem 0.75rem;
+  border-bottom: 1px solid #1e1e1e;
+  flex-shrink: 0;
+}
+.rp-recipe-drawer-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #f5ede6;
+  margin: 0;
+  line-height: 1.3;
+  flex: 1;
+}
+.rp-recipe-drawer-header button {
+  background: none; border: none; cursor: pointer;
+  padding: 2px; flex-shrink: 0;
+  display: flex; align-items: center;
+}
+
+.rp-recipe-drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem 1.25rem 1.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: #2a2a2a transparent;
+}
+
+.rp-recipe-culture {
+  display: inline-block;
+  font-size: 0.68rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--reel-teal-l);
+  background: rgba(42,125,111,0.2);
+  border: 1px solid rgba(125,214,204,0.25);
+  padding: 2px 10px; border-radius: 20px;
+  margin-bottom: 0.75rem;
+}
+.rp-recipe-desc {
+  font-size: 0.875rem;
+  color: rgba(255,255,255,0.7);
+  line-height: 1.65;
+  margin: 0 0 1rem;
+}
+.rp-recipe-loading {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 1.25rem 0; color: #5a3a3a; font-size: 0.875rem;
+}
+.rp-recipe-spinner {
+  width: 18px; height: 18px; flex-shrink: 0;
+  border: 2px solid #2a2a2a; border-top-color: var(--reel-teal);
+  border-radius: 50%; animation: rp-spin 0.7s linear infinite;
+}
+@keyframes rp-spin { to { transform: rotate(360deg); } }
+
+.rp-recipe-section { margin-top: 1.1rem; }
+.rp-recipe-section-title {
+  font-family: 'Fraunces', serif;
+  font-size: 0.9rem; font-weight: 700;
+  color: var(--reel-teal-l);
+  margin: 0 0 0.6rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid #1e1e1e;
+}
+.rp-recipe-ingredients {
+  list-style: none; padding: 0; margin: 0;
+  display: flex; flex-direction: column; gap: 0.25rem;
+}
+.rp-recipe-ing-item {
+  display: flex; gap: 0.5rem;
+  font-size: 0.855rem;
+  color: rgba(255,255,255,0.75);
+  padding: 0.25rem 0;
+  border-bottom: 1px solid #151515;
+}
+.rp-recipe-ing-item:last-child { border-bottom: none; }
+.rp-recipe-ing-dot { color: var(--reel-teal); flex-shrink: 0; }
+.rp-recipe-steps {
+  padding-left: 1.1rem; margin: 0;
+  display: flex; flex-direction: column; gap: 0.6rem;
+}
+.rp-recipe-steps li {
+  font-size: 0.855rem;
+  color: rgba(255,255,255,0.75);
+  line-height: 1.6;
+}
+
+/* ── Nav arrows (desktop right side) ── */
+.rp-nav-arrows {
+  position: absolute;
+  right: 1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  pointer-events: none;
+}
+.rp-nav-btn {
+  width: 40px; height: 40px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  pointer-events: all;
+  backdrop-filter: blur(6px);
+  transition: background 0.15s, transform 0.12s;
+}
+.rp-nav-btn:hover:not(:disabled)  { background: rgba(255,255,255,0.2); transform: scale(1.08); }
+.rp-nav-btn:disabled { opacity: 0.25; cursor: default; }
+
+.rp-nav-dots {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  max-height: 200px;
+  overflow: hidden;
+}
+.rp-nav-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.3);
+  cursor: pointer;
+  pointer-events: all;
+  transition: background 0.15s, transform 0.15s;
+  padding: 0;
+}
+.rp-nav-dot.active {
+  background: var(--reel-teal-l);
+  transform: scale(1.4);
+}
+.rp-nav-dot:hover:not(.active) { background: rgba(255,255,255,0.6); }
+
+/* ── Loading / error / empty states ── */
+.rp-loading, .rp-error, .rp-empty {
+  position: fixed;
+  top: var(--nav-h); left: 0; right: 0; bottom: 0;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  color: rgba(255,255,255,0.5);
+  font-family: 'DM Sans', sans-serif;
+}
+.rp-loading-spinner {
+  width: 36px; height: 36px;
+  border: 3px solid #1a1a1a;
+  border-top-color: var(--reel-teal);
+  border-radius: 50%;
+  animation: rp-spin 0.7s linear infinite;
+}
+.rp-empty span { font-size: 3rem; opacity: 0.3; }
+.rp-empty p, .rp-error p { font-size: 0.95rem; }
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .rp-nav-arrows { display: none; }
+  .rp-overlay-info { right: 80px; }
+}
+
+@media (max-width: 480px) {
+  .rp-overlay-info { bottom: 4.5rem; left: 1rem; right: 76px; }
+  .rp-actions      { right: 0.75rem; bottom: 4rem; gap: 1rem; }
+  .rp-overlay-title { font-size: 0.95rem; }
+  .rp-comment-drawer, .rp-recipe-drawer { max-height: 75%; }
+  .rp-recipe-drawer-header, .rp-comment-drawer-header { padding: 0.85rem 1rem 0.65rem; }
+  .rp-recipe-drawer-body, .rp-comment-list { padding: 0.75rem 1rem; }
+  .rp-comment-form { padding: 0.6rem 1rem 0.85rem; }
+}

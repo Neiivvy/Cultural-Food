@@ -1,49 +1,46 @@
-/* ── CultureFilter Aside ── */
+/* ════════════════════════════════════════
+   CultureFilter.css — culture chips only
+   ════════════════════════════════════════ */
+
 .cf-aside {
   width: 200px;
   flex-shrink: 0;
-  padding: 2rem 0 2rem 1.5rem;
+  padding: 1.75rem 0 2rem 1.25rem;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
-  /* sticky so it stays while feed scrolls */
+  gap: 0.5rem;
   position: sticky;
   top: 64px;
   height: calc(100vh - 64px);
   overflow-y: auto;
 }
-
 .cf-aside::-webkit-scrollbar { width: 0; }
 
-.cf-header {
-  margin-bottom: 0.4rem;
-}
-
+.cf-header { margin-bottom: 0.3rem; }
 .cf-label {
-  font-size: 0.65rem;
+  font-size: 0.63rem;
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #9c7c6a;
 }
 
-/* ── Chips ── */
 .cf-list {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: 0.1rem;
 }
 
 .cf-chip {
   display: flex;
   align-items: center;
   gap: 0.55rem;
-  padding: 0.5rem 0.75rem;
+  padding: 0.46rem 0.7rem;
   border: none;
   background: transparent;
-  border-radius: 8px;
+  border-radius: 7px;
   font-family: "DM Sans", sans-serif;
-  font-size: 0.875rem;
+  font-size: 0.845rem;
   font-weight: 500;
   color: #5a3a3a;
   cursor: pointer;
@@ -51,35 +48,18 @@
   transition: background 0.15s, color 0.15s;
   width: 100%;
 }
-
-.cf-chip:hover {
-  background: #f9f0f0;
-  color: #7c2d2d;
-}
-
-.cf-chip.active {
-  background: #f9f0f0;
-  color: #7c2d2d;
-  font-weight: 700;
-}
+.cf-chip:hover  { background: #f9f0f0; color: #7c2d2d; }
+.cf-chip.active { background: #f9f0f0; color: #7c2d2d; font-weight: 700; }
 
 .cf-chip-dot {
-  width: 7px;
-  height: 7px;
+  width: 7px; height: 7px;
   border-radius: 50%;
   border: 1.5px solid currentColor;
   flex-shrink: 0;
   transition: background 0.15s;
 }
+.cf-chip.active .cf-chip-dot { background: #7c2d2d; border-color: #7c2d2d; }
 
-.cf-chip.active .cf-chip-dot {
-  background: #7c2d2d;
-  border-color: #7c2d2d;
-}
-
-/* ── Responsive: hide on mobile (filter opens from toggle) ── */
 @media (max-width: 900px) {
-  .cf-aside {
-    display: none;
-  }
+  .cf-aside { display: none; }
 }
